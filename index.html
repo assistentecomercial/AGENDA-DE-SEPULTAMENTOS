@@ -4,11 +4,42 @@
 <meta charset="UTF-8">
 <title>Login - Agenda de Sepultamentos</title>
 <style>
-  body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
-  .login-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+  body { 
+    font-family: "Garamond", serif; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh; 
+    background: #f0f0f0; 
+  }
+  .login-container { 
+    background: #fff; 
+    padding: 30px; 
+    border-radius: 8px; 
+    box-shadow: 0 0 10px rgba(0,0,0,0.1); 
+    width: 350px; 
+    text-align: center; 
+  }
   .login-container h1 { margin-bottom: 20px; }
-  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
-  button { width: 100%; padding: 10px; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; }
+  input { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 10px 0; 
+    border-radius: 6px; 
+    border: 1px solid #ccc; 
+    font-family: "Garamond", serif;
+  }
+  button { 
+    width: 100%; 
+    padding: 10px; 
+    border: none; 
+    border-radius: 6px; 
+    background: green; 
+    color: white; 
+    font-size: 16px; 
+    cursor: pointer; 
+    font-family: "Garamond", serif;
+  }
 </style>
 </head>
 <body>
@@ -21,17 +52,22 @@
 </div>
 
 <script>
+const usuariosPermitidos = [
+  "CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH",
+  "ILDEYLSON","JOSE","KARINE","LAURA","LUCIENE","LUIS",
+  "MANOELLY","MARCIO","MILLENA","PAULO","RAFAEL","RAFAELLE",
+  "RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"
+];
+
 function login() {
   const usuario = document.getElementById('usuario').value.trim();
   const senha = document.getElementById('senha').value;
 
   if(!usuario) return alert("Digite seu usuário.");
+  if(!usuariosPermitidos.includes(usuario.toUpperCase())) return alert("Usuário não autorizado!");
   if(senha !== "Complexo@") return alert("Senha incorreta!");
 
-  // Salva o usuário logado no sessionStorage
   sessionStorage.setItem('usuarioLogado', usuario);
-
-  // Redireciona para cadastro
   window.location.href = "cadastro.html";
 }
 </script>
