@@ -4,73 +4,44 @@
 <meta charset="UTF-8">
 <title>Login - Agenda de Sepultamentos</title>
 <style>
-  body { 
-    font-family: "Garamond", serif; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
-    background: #f0f0f0; 
-  }
-  .login-container { 
-    background: #fff; 
-    padding: 30px; 
-    border-radius: 8px; 
-    box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-    width: 350px; 
-    text-align: center; 
-  }
-  .login-container h1 { margin-bottom: 20px; }
-  input { 
-    width: 100%; 
-    padding: 10px; 
-    margin: 10px 0; 
-    border-radius: 6px; 
-    border: 1px solid #ccc; 
-    font-family: "Garamond", serif;
-  }
-  button { 
-    width: 100%; 
-    padding: 10px; 
-    border: none; 
-    border-radius: 6px; 
-    background: green; 
-    color: white; 
-    font-size: 16px; 
-    cursor: pointer; 
-    font-family: "Garamond", serif;
-  }
+  body { font-family: Garamond, serif; background: #fefefe; display:flex; justify-content:center; align-items:center; height:100vh; margin:0; }
+  #loginBox, #mainContent { border:1px solid #ccc; padding:20px; border-radius:8px; background:#fff; width:350px; }
+  h1 { text-align:center; margin-bottom:20px; }
+  label { display:block; margin-top:10px; }
+  input { width:100%; padding:8px; margin-top:5px; }
+  button { width:100%; margin-top:15px; padding:10px; background:green; color:white; border:none; border-radius:5px; cursor:pointer; font-size:16px; }
+  button:hover { background:#006400; }
 </style>
 </head>
 <body>
 
-<div class="login-container">
+<div id="loginBox">
   <h1>Login</h1>
-  <input type="text" id="usuario" placeholder="Digite seu nome de usuário">
-  <input type="password" id="senha" placeholder="Senha">
+  <label for="usuario">Usuário (primeiro nome)</label>
+  <input type="text" id="usuarioLogin" placeholder="Digite seu primeiro nome">
+
+  <label for="senha">Senha</label>
+  <input type="password" id="senhaLogin" placeholder="Senha">
+
   <button onclick="login()">Entrar</button>
 </div>
 
+<div id="mainContent" style="display:none;">
+  <h1>Bem-vindo à Agenda de Sepultamentos</h1>
+  <p>Login realizado com sucesso! Aqui você acessa a página de cadastro de sepultamentos.</p>
+  <button onclick="sair()">Sair</button>
+</div>
+
 <script>
-const usuariosPermitidos = [
-  "CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH",
-  "ILDEYLSON","JOSE","KARINE","LAURA","LUCIENE","LUIS",
-  "MANOELLY","MARCIO","MILLENA","PAULO","RAFAEL","RAFAELLE",
-  "RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"
-];
+const usuariosAutorizados = ["CARLOS","DARVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON","JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA","PAULO","RAFAEL","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"];
+const senhaCorreta = "Complexo@";
+let usuarioLogado = "";
 
-function login() {
-  const usuario = document.getElementById('usuario').value.trim();
-  const senha = document.getElementById('senha').value;
+function login(){
+  const usuario = document.getElementById('usuarioLogin').value.trim().toUpperCase();
+  const senha = document.getElementById('senhaLogin').value;
 
-  if(!usuario) return alert("Digite seu usuário.");
-  if(!usuariosPermitidos.includes(usuario.toUpperCase())) return alert("Usuário não autorizado!");
-  if(senha !== "Complexo@") return alert("Senha incorreta!");
-
-  sessionStorage.setItem('usuarioLogado', usuario);
-  window.location.href = "cadastro.html";
-}
-</script>
-
-</body>
-</html>
+  if(usuariosAutorizados.includes(usuario) && senha === senhaCorreta){
+    usuarioLogado = usuario;
+    document.getElementById('loginBox').style.display='none';
+    document.getElementById('main
