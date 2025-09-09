@@ -52,29 +52,28 @@ function displayAgenda(records) {
   tardeContainer.innerHTML = "";
 
   records.forEach(record => {
-    const { Horário, Status, Periodo } = record.fields;
-    const falecido = record.fields.Falecido || "";
-    const atendente = record.fields.Atendente || "";
-    const pendencia = record.fields.Pendencia || "";
-    const setor = record.fields.Setor || "";
+    // Ajuste dos nomes de campo de acordo com o Airtable
+    const Horarios = record.fields.Horarios || "";
+    const Status = record.fields.Status || "Livre";
+    const Periodo = record.fields["Período"] || "";
+    const Falecido = record.fields.Falecido || "";
+    const Atendente = record.fields.Atendente || "";
 
     const card = document.createElement("div");
     card.className = "card " + (Status === "Livre" ? "livre" : "ocupado");
 
     card.innerHTML = `
-      <div><strong>${Horário}</strong> - <span>${Status}</span></div>
+      <div><strong>${Horarios}</strong> - <span>${Status}</span></div>
       <div class="info">
-        <input type="text" placeholder="Falecido" value="${falecido}" id="falecido-${record.id}" />
-        <input type="text" placeholder="Atendente" value="${atendente}" id="atendente-${record.id}" />
-        <input type="text" placeholder="Pendência" value="${pendencia}" id="pendencia-${record.id}" />
-        <input type="text" placeholder="Setor" value="${setor}" id="setor-${record.id}" />
+        <input type="text" placeholder="Falecido" value="${Falecido}" id="falecido-${record.id}" />
+        <input type="text" placeholder="Atendente" value="${Atendente}" id="atendente-${record.id}" />
       </div>
       <button onclick="salvarReserva('${record.id}')">Salvar</button>
     `;
 
-    let periodo = Periodo;
+    let periodo = Periodo.trim();
     if (!periodo) {
-      const horaNum = parseInt(Horário.split("h")[0], 10);
+      const horaNum = parseInt(Horarios.split("h")[0], 10);
       periodo = horaNum < 12 ? "Manhã" : "Tarde";
     }
 
@@ -87,10 +86,8 @@ function displayAgenda(records) {
 async function salvarReserva(recordId) {
   const falecido = document.getElementById(`falecido-${recordId}`).value;
   const atendente = document.getElementById(`atendente-${recordId}`).value;
-  const pendencia = document.getElementById(`pendencia-${recordId}`).value;
-  const setor = document.getElementById(`setor-${recordId}`).value;
 
-  if (!falecido || !atendente || !pendencia || !setor) {
+  if (!falecido || !atendente) {
     return alert("Todos os campos são obrigatórios!");
   }
 
@@ -98,8 +95,6 @@ async function salvarReserva(recordId) {
     fields: {
       Falecido: falecido,
       Atendente: atendente,
-      Pendencia: pendencia,
-      Setor: setor,
       Status: "Ocupado"
     }
   };
