@@ -7,7 +7,7 @@
   body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
   .login-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
   .login-container h1 { margin-bottom: 20px; }
-  select, input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+  input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
   button { width: 100%; padding: 10px; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; }
 </style>
 </head>
@@ -15,45 +15,23 @@
 
 <div class="login-container">
   <h1>Login</h1>
-  <select id="usuario">
-    <option value="">Selecione o usuário</option>
-    <option value="CARLOS">CARLOS</option>
-    <option value="DÁRVILLA">DÁRVILLA</option>
-    <option value="DIEGO">DIEGO</option>
-    <option value="EDER">EDER</option>
-    <option value="ELTON">ELTON</option>
-    <option value="GENTILBERTH">GENTILBERTH</option>
-    <option value="ILDEYLSON">ILDEYLSON</option>
-    <option value="JOSE">JOSE</option>
-    <option value="KARINE">KARINE</option>
-    <option value="LAURA">LAURA</option>
-    <option value="LUCIENE">LUCIENE</option>
-    <option value="LUIS">LUIS</option>
-    <option value="MANOELLY">MANOELLY</option>
-    <option value="MARCIO">MARCIO</option>
-    <option value="MILLENA">MILLENA</option>
-    <option value="PAULO">PAULO</option>
-    <option value="RAFAEL">RAFAEL</option>
-    <option value="RAFAELLE">RAFAELLE</option>
-    <option value="RICHARDS">RICHARDS</option>
-    <option value="TALITA">TALITA</option>
-    <option value="THALYSON">THALYSON</option>
-    <option value="VIVIAN">VIVIAN</option>
-    <option value="VIVIANE">VIVIANE</option>
-  </select>
+  <input type="text" id="usuario" placeholder="Digite seu nome de usuário">
   <input type="password" id="senha" placeholder="Senha">
   <button onclick="login()">Entrar</button>
 </div>
 
 <script>
 function login() {
-  const usuario = document.getElementById('usuario').value;
+  const usuario = document.getElementById('usuario').value.trim();
   const senha = document.getElementById('senha').value;
 
-  if(!usuario) return alert("Selecione um usuário.");
+  if(!usuario) return alert("Digite seu usuário.");
   if(senha !== "Complexo@") return alert("Senha incorreta!");
 
-  // Redireciona para a página de cadastro do falecido
+  // Salva o usuário logado no sessionStorage
+  sessionStorage.setItem('usuarioLogado', usuario);
+
+  // Redireciona para cadastro
   window.location.href = "cadastro.html";
 }
 </script>
