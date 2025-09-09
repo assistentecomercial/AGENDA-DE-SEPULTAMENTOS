@@ -5,11 +5,11 @@
 <title>Agenda de Sepultamentos</title>
 <style>
   body { font-family: Garamond, serif; background: #fefefe; padding: 20px; }
-  h1,h2 { text-align: center; }
-  .container { display: flex; justify-content: space-around; gap: 20px; }
+  h1,h2 { text-align:center; }
+  .container { display:flex; justify-content:space-around; gap:20px; }
   .form-container, .agenda-container { flex:1; padding:10px; border:1px solid #ccc; border-radius:8px; }
   label { display:block; margin-top:10px; }
-  input, select { width: 100%; padding:5px; margin-top:5px; }
+  input, select { width:100%; padding:5px; margin-top:5px; }
   button { margin-top:15px; padding:10px; background:green; color:white; border:none; border-radius:5px; cursor:pointer; }
   table { width:100%; border-collapse:collapse; margin-top:10px; }
   th, td { border:1px solid #ccc; padding:5px; text-align:center; }
@@ -22,58 +22,49 @@
 </head>
 <body>
 
-<h1>Login - Agenda de Sepultamentos</h1>
-<div id="loginBox" style="max-width:300px;margin:auto;">
-  <label for="usuario">Usuário (primeiro nome):</label>
-  <input type="text" id="usuarioLogin" placeholder="Digite seu primeiro nome">
-  <label for="senha">Senha:</label>
-  <input type="password" id="senhaLogin" placeholder="Senha">
-  <button onclick="login()">Entrar</button>
-</div>
+<h1>Agenda de Sepultamentos</h1>
+<div class="container">
+  <div class="form-container">
+    <h2>Cadastrar Sepultamento</h2>
+    <label for="falecido">Nome do Falecido:</label>
+    <input type="text" id="falecido" placeholder="Digite o nome do falecido">
 
-<div id="mainContent" style="display:none;">
-  <div class="container">
-    <div class="form-container">
-      <h2>Cadastrar Sepultamento</h2>
-      <label for="falecido">Nome do Falecido:</label>
-      <input type="text" id="falecido" placeholder="Digite o nome do falecido">
+    <label for="setor">Setor:</label>
+    <input type="text" id="setor" placeholder="Digite o setor">
 
-      <label for="setor">Setor:</label>
-      <input type="text" id="setor" placeholder="Digite o setor">
+    <label for="pendencia">Possui Pendências?</label>
+    <input type="text" id="pendencia" placeholder="Sim/Não">
 
-      <label for="pendencia">Possui Pendências?</label>
-      <input type="text" id="pendencia" placeholder="Sim/Não">
+    <label for="exumacao">Exumação?</label>
+    <input type="text" id="exumacao" placeholder="Sim/Não">
 
-      <label for="exumacao">Exumação?</label>
-      <input type="text" id="exumacao" placeholder="Sim/Não">
+    <label for="data">Data do Sepultamento:</label>
+    <input type="date" id="data">
 
-      <label for="data">Data do Sepultamento:</label>
-      <input type="date" id="data">
+    <label for="horario">Horário:</label>
+    <select id="horario">
+      <option value="">Selecione o horário</option>
+    </select>
 
-      <label for="horario">Horário:</label>
-      <select id="horario">
-        <option value="">Selecione o horário</option>
-      </select>
+    <button onclick="salvar()">Salvar Sepultamento</button>
+  </div>
 
-      <button onclick="salvar()">Salvar Sepultamento</button>
-    </div>
-
-    <div class="agenda-container">
-      <h2>Sepultamentos do dia</h2>
-      <input type="date" id="filtroData" onchange="atualizarAgenda()">
-      <table id="agenda">
-        <thead>
-          <tr>
-            <th>Horário</th>
-            <th>Falecido</th>
-            <th>Setor</th>
-            <th>Pendência</th>
-            <th>Exumação</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <div class="agenda-container">
+    <h2>Sepultamentos do dia</h2>
+    <input type="date" id="filtroData" onchange="atualizarAgenda()">
+    <div id="dataExibida" style="margin-top:10px; font-weight:bold;"></div>
+    <table id="agenda">
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Falecido</th>
+          <th>Setor</th>
+          <th>Pendência</th>
+          <th>Exumação</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 
@@ -86,9 +77,8 @@
 </div>
 
 <script>
-const usuariosAutorizados = ["CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON","JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA","PAULO","RAFAEL","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"];
-const senhaCorreta = "Complexo@";
-let usuarioLogado = "";
+const usuarioLogado = localStorage.getItem('usuarioLogado')||'';
+if(!usuarioLogado) window.location.href="login.html";
 
 const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
 
@@ -99,20 +89,6 @@ horarios.forEach(h => {
   opt.value = h; opt.textContent = h;
   selectHorario.appendChild(opt);
 });
-
-// Login
-function login(){
-  const usuario = document.getElementById('usuarioLogin').value.trim().toUpperCase();
-  const senha = document.getElementById('senhaLogin').value;
-  if(usuariosAutorizados.includes(usuario) && senha === senhaCorreta){
-    usuarioLogado = usuario;
-    document.getElementById('loginBox').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
-    atualizarAgenda();
-  } else {
-    alert("Usuário ou senha inválidos!");
-  }
-}
 
 // Salvar sepultamento
 function salvar(){
@@ -214,6 +190,8 @@ function mostrarModal(registro){
 }
 
 document.getElementById('closeModal').onclick=()=>{document.getElementById('modal').style.display='none';};
+
+atualizarAgenda();
 </script>
 </body>
 </html>
