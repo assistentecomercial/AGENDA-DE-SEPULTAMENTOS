@@ -164,7 +164,13 @@ function atualizarAgenda(){
   const tbody = document.querySelector('#agenda tbody');
   tbody.innerHTML = '';
   const registros = JSON.parse(localStorage.getItem('registros'))||[];
+
   const filtro = document.getElementById('filtroData').value || new Date().toISOString().split('T')[0];
+
+  // Formata a data para exibir abaixo do calendário
+  const dataSelecionada = new Date(filtro);
+  const options = { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' };
+  document.getElementById('dataExibida').textContent = dataSelecionada.toLocaleDateString('pt-BR', options);
 
   horarios.forEach(h=>{
     const ocupacao = registros.find(r=>r.data===filtro && r.horario===h);
