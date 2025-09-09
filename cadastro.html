@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <title>Cadastro e Agenda de Sepultamentos</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+  body { font-family: "Garamond", serif; background: #f0f0f0; padding: 20px; }
   h1 { text-align: center; margin-bottom: 20px; }
-  .container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
   .form-container, .agenda-container { background: #fff; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
   label { display: block; margin: 10px 0 5px; }
-  input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; }
-  button { padding: 10px; width: 100%; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; }
+  input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; font-family: "Garamond", serif; }
+  button { padding: 10px; width: 100%; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; font-family: "Garamond", serif; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
   .livre { background-color: #d4edda; }
-  .ocupado { background-color: #f8d7da; }
+  .ocupado { background-color: #f8d7da; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <h1>Cadastro e Agenda de Sepultamentos</h1>
 <div class="container">
+  <!-- Formulário de cadastro -->
   <div class="form-container">
     <h2>Cadastrar Sepultamento</h2>
     <label for="falecido">Nome do Falecido:</label>
@@ -33,7 +34,7 @@
     <input type="text" id="pendencia" placeholder="Sim/Não">
 
     <label for="data">Data do Sepultamento:</label>
-    <input type="date" id="data" min="" max="">
+    <input type="date" id="data">
 
     <label for="horario">Horário:</label>
     <select id="horario">
@@ -58,107 +59,99 @@
     <button onclick="salvar()">Salvar Sepultamento</button>
   </div>
 
+  <!-- Agenda -->
   <div class="agenda-container">
-    <h2>Agenda do Dia</h2>
+    <h2>Filtrar por Dia</h2>
+    <input type="date" id="filtroData" onchange="atualizarAgenda()">
+
+    <h2>Agenda</h2>
     <table id="agenda">
       <thead>
         <tr>
           <th>Horário</th>
-          <th>Status</th>
           <th>Falecido</th>
-          <th>Atendente</th>
-          <th>Setor</th>
+          <th>Data</th>
           <th>Pendência</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Horários preenchidos pelo JS -->
+        <!-- preenchido pelo JS -->
       </tbody>
     </table>
   </div>
 </div>
 
 <script>
-  // Datas mínima e máxima (hoje até +5 dias)
-  const inputData = document.getElementById('data');
-  const hoje = new Date();
-  const maxData = new Date();
-  maxData.setDate(hoje.getDate() + 5);
-  inputData.min = hoje.toISOString().split('T')[0];
-  inputData.max = maxData.toISOString().split('T')[0];
+const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
+const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Desconhecido';
 
-  const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
+function limparRegistrosAntigos() {
+  let registros = JSON.parse(localStorage.getItem('registros')) || [];
+  const agora = new Date();
+  registros = registros.filter(r => {
+    const [hora, min] = r.horario.split('h').map(Number);
+    const dataSep = new Date(r.data);
+    dataSep.setHours(hora, min, 0, 0);
+    dataSep.setDate(dataSep.getDate() + 2);
+    return dataSep > agora;
+  });
+  localStorage.setItem('registros', JSON.stringify(registros));
+}
 
-  const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Desconhecido';
+function atualizarAgenda() {
+  limparRegistrosAntigos();
+  const tbody = document.querySelector('#agenda tbody');
+  tbody.innerHTML = '';
+  const registros = JSON.parse(localStorage.getItem('registros')) || [];
+  const filtro = document.getElementById('filtroData').value || new Date().toISOString().split('T')[0];
 
-  function limparRegistrosAntigos() {
-    let registros = JSON.parse(localStorage.getItem('registros')) || [];
-    const agora = new Date();
-    registros = registros.filter(r => {
-      const [hora, min] = r.horario.split('h').map(Number);
-      const dataSep = new Date(r.data);
-      dataSep.setHours(hora, min, 0, 0);
-      dataSep.setDate(dataSep.getDate() + 2); // mantém 2 dias após
-      return dataSep > agora;
-    });
-    localStorage.setItem('registros', JSON.stringify(registros));
+  horarios.forEach(h => {
+    const ocupacao = registros.find(r => r.data === filtro && r.horario === h);
+    const pendenciaText = ocupacao ? (ocupacao.pendencia.toLowerCase() === 'sim' ? 'Sim: '+ocupacao.pendencia : 'Não') : '';
+    tbody.innerHTML += `
+      <tr class="${ocupacao ? 'ocupado' : 'livre'}" onclick="${ocupacao ? `alert('Atendente: ${ocupacao.usuario}\\nSetor: ${ocupacao.setor}')` : ''}">
+        <td>${h}</td>
+        <td>${ocupacao ? ocupacao.falecido : ''}</td>
+        <td>${ocupacao ? ocupacao.data : ''}</td>
+        <td>${pendenciaText}</td>
+      </tr>
+    `;
+  });
+}
+
+function salvar() {
+  const falecido = document.getElementById('falecido').value.trim();
+  const setor = document.getElementById('setor').value.trim();
+  const pendencia = document.getElementById('pendencia').value.trim();
+  const data = document.getElementById('data').value;
+  const horario = document.getElementById('horario').value;
+
+  if(!falecido || !setor || !pendencia || !data || !horario){
+    return alert("Todos os campos são obrigatórios!");
   }
 
-  function atualizarAgenda() {
-    limparRegistrosAntigos();
-    const tbody = document.querySelector('#agenda tbody');
-    tbody.innerHTML = '';
-    const registros = JSON.parse(localStorage.getItem('registros')) || [];
-    const hojeStr = new Date().toISOString().split('T')[0];
+  let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
-    horarios.forEach(h => {
-      const ocupacao = registros.find(r => r.data === hojeStr && r.horario === h);
-      tbody.innerHTML += `
-        <tr class="${ocupacao ? 'ocupado' : 'livre'}">
-          <td>${h}</td>
-          <td>${ocupacao ? 'Ocupado' : 'Livre'}</td>
-          <td>${ocupacao ? ocupacao.falecido : ''}</td>
-          <td>${ocupacao ? ocupacao.usuario : ''}</td>
-          <td>${ocupacao ? ocupacao.setor : ''}</td>
-          <td>${ocupacao ? ocupacao.pendencia : ''}</td>
-        </tr>
-      `;
-    });
+  if(registros.some(r => r.data === data && r.horario === horario)){
+    return alert("Esse horário já foi reservado!");
   }
 
-  function salvar() {
-    const falecido = document.getElementById('falecido').value.trim();
-    const setor = document.getElementById('setor').value.trim();
-    const pendencia = document.getElementById('pendencia').value.trim();
-    const data = document.getElementById('data').value;
-    const horario = document.getElementById('horario').value;
+  registros.push({ falecido, setor, pendencia, data, horario, usuario: usuarioLogado });
+  localStorage.setItem('registros', JSON.stringify(registros));
 
-    if(!falecido || !setor || !pendencia || !data || !horario){
-      return alert("Todos os campos são obrigatórios!");
-    }
+  alert("Sepultamento cadastrado com sucesso!");
+  document.getElementById('falecido').value = "";
+  document.getElementById('setor').value = "";
+  document.getElementById('pendencia').value = "";
+  document.getElementById('data').value = "";
+  document.getElementById('horario').value = "";
 
-    let registros = JSON.parse(localStorage.getItem('registros')) || [];
-
-    // Bloqueia se o horário já usado
-    if(registros.some(r => r.data === data && r.horario === horario)){
-      return alert("Esse horário já foi reservado!");
-    }
-
-    registros.push({ falecido, setor, pendencia, data, horario, usuario: usuarioLogado });
-    localStorage.setItem('registros', JSON.stringify(registros));
-
-    alert("Sepultamento cadastrado com sucesso!");
-    document.getElementById('falecido').value = "";
-    document.getElementById('setor').value = "";
-    document.getElementById('pendencia').value = "";
-    document.getElementById('data').value = "";
-    document.getElementById('horario').value = "";
-
-    atualizarAgenda();
-  }
-
-  // Atualiza agenda ao carregar a página
   atualizarAgenda();
+}
+
+// Inicializa filtro com data atual
+document.getElementById('filtroData').value = new Date().toISOString().split('T')[0];
+atualizarAgenda();
 </script>
 
 </body>
