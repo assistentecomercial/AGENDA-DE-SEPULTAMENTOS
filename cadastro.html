@@ -2,160 +2,212 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastro e Agenda de Sepultamentos</title>
+<title>Agenda de Sepultamentos</title>
 <style>
-  body { font-family: "Garamond", serif; background: #f0f0f0; padding: 20px; }
-  h1 { text-align: center; margin-bottom: 20px; }
-  .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-  .form-container, .agenda-container { background: #fff; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-  label { display: block; margin: 10px 0 5px; }
-  input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; font-family: "Garamond", serif; }
-  button { padding: 10px; width: 100%; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; font-family: "Garamond", serif; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  .livre { background-color: #d4edda; }
-  .ocupado { background-color: #f8d7da; cursor: pointer; }
+  body { font-family: Garamond, serif; background: #fefefe; padding: 20px; }
+  h1,h2 { text-align: center; }
+  .container { display: flex; justify-content: space-around; gap: 20px; }
+  .form-container, .agenda-container { flex:1; padding:10px; border:1px solid #ccc; border-radius:8px; }
+  label { display:block; margin-top:10px; }
+  input, select { width: 100%; padding:5px; margin-top:5px; }
+  button { margin-top:15px; padding:10px; background:green; color:white; border:none; border-radius:5px; cursor:pointer; }
+  table { width:100%; border-collapse:collapse; margin-top:10px; }
+  th, td { border:1px solid #ccc; padding:5px; text-align:center; }
+  .livre { background-color:#d4edda; }
+  .ocupado { background-color:#f8d7da; cursor:pointer; }
+  #modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; }
+  #modalContentBox { background:#fff; padding:20px; border-radius:8px; width:300px; position:relative; }
+  #closeModal { position:absolute; top:10px; right:10px; cursor:pointer; font-weight:bold; }
 </style>
 </head>
 <body>
 
-<h1>Cadastro e Agenda de Sepultamentos</h1>
-<div class="container">
-  <!-- Formulário de cadastro -->
-  <div class="form-container">
-    <h2>Cadastrar Sepultamento</h2>
-    <label for="falecido">Nome do Falecido:</label>
-    <input type="text" id="falecido" placeholder="Digite o nome do falecido">
+<h1>Login - Agenda de Sepultamentos</h1>
+<div id="loginBox" style="max-width:300px;margin:auto;">
+  <label for="usuario">Usuário (primeiro nome):</label>
+  <input type="text" id="usuarioLogin" placeholder="Digite seu primeiro nome">
+  <label for="senha">Senha:</label>
+  <input type="password" id="senhaLogin" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+</div>
 
-    <label for="setor">Setor:</label>
-    <input type="text" id="setor" placeholder="Digite o setor">
+<div id="mainContent" style="display:none;">
+  <div class="container">
+    <div class="form-container">
+      <h2>Cadastrar Sepultamento</h2>
+      <label for="falecido">Nome do Falecido:</label>
+      <input type="text" id="falecido" placeholder="Digite o nome do falecido">
 
-    <label for="pendencia">Possui Pendências?</label>
-    <input type="text" id="pendencia" placeholder="Sim/Não">
+      <label for="setor">Setor:</label>
+      <input type="text" id="setor" placeholder="Digite o setor">
 
-    <label for="data">Data do Sepultamento:</label>
-    <input type="date" id="data">
+      <label for="pendencia">Possui Pendências?</label>
+      <input type="text" id="pendencia" placeholder="Sim/Não">
 
-    <label for="horario">Horário:</label>
-    <select id="horario">
-      <option value="">Selecione o horário</option>
-      <option value="09h00">09h00</option>
-      <option value="09h20">09h20</option>
-      <option value="09h40">09h40</option>
-      <option value="10h00">10h00</option>
-      <option value="10h20">10h20</option>
-      <option value="10h40">10h40</option>
-      <option value="11h00">11h00</option>
-      <option value="14h20">14h20</option>
-      <option value="14h40">14h40</option>
-      <option value="15h00">15h00</option>
-      <option value="15h20">15h20</option>
-      <option value="15h40">15h40</option>
-      <option value="16h00">16h00</option>
-      <option value="16h20">16h20</option>
-      <option value="16h40">16h40</option>
-    </select>
+      <label for="exumacao">Exumação?</label>
+      <input type="text" id="exumacao" placeholder="Sim/Não">
 
-    <button onclick="salvar()">Salvar Sepultamento</button>
+      <label for="data">Data do Sepultamento:</label>
+      <input type="date" id="data">
+
+      <label for="horario">Horário:</label>
+      <select id="horario">
+        <option value="">Selecione o horário</option>
+      </select>
+
+      <button onclick="salvar()">Salvar Sepultamento</button>
+    </div>
+
+    <div class="agenda-container">
+      <h2>Sepultamentos do dia</h2>
+      <input type="date" id="filtroData" onchange="atualizarAgenda()">
+      <table id="agenda">
+        <thead>
+          <tr>
+            <th>Horário</th>
+            <th>Falecido</th>
+            <th>Setor</th>
+            <th>Pendência</th>
+            <th>Exumação</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
+</div>
 
-  <!-- Agenda -->
-  <div class="agenda-container">
-    <h2>Filtrar por Dia</h2>
-    <input type="date" id="filtroData" onchange="atualizarAgenda()">
-
-    <h2>Agenda</h2>
-    <table id="agenda">
-      <thead>
-        <tr>
-          <th>Horário</th>
-          <th>Falecido</th>
-          <th>Data</th>
-          <th>Pendência</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- preenchido pelo JS -->
-      </tbody>
-    </table>
+<!-- Modal -->
+<div id="modal">
+  <div id="modalContentBox">
+    <span id="closeModal">X</span>
+    <div id="modalContent"></div>
   </div>
 </div>
 
 <script>
+const usuariosAutorizados = ["CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON","JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA","PAULO","RAFAEL","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"];
+const senhaCorreta = "Complexo@";
+let usuarioLogado = "";
+
 const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
-const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Desconhecido';
 
-function limparRegistrosAntigos() {
-  let registros = JSON.parse(localStorage.getItem('registros')) || [];
-  const agora = new Date();
-  registros = registros.filter(r => {
-    const [hora, min] = r.horario.split('h').map(Number);
-    const dataSep = new Date(r.data);
-    dataSep.setHours(hora, min, 0, 0);
-    dataSep.setDate(dataSep.getDate() + 2);
-    return dataSep > agora;
-  });
-  localStorage.setItem('registros', JSON.stringify(registros));
+// Preenche select de horários
+const selectHorario = document.getElementById('horario');
+horarios.forEach(h => {
+  let opt = document.createElement('option');
+  opt.value = h; opt.textContent = h;
+  selectHorario.appendChild(opt);
+});
+
+// Login
+function login(){
+  const usuario = document.getElementById('usuarioLogin').value.trim().toUpperCase();
+  const senha = document.getElementById('senhaLogin').value;
+  if(usuariosAutorizados.includes(usuario) && senha === senhaCorreta){
+    usuarioLogado = usuario;
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    atualizarAgenda();
+  } else {
+    alert("Usuário ou senha inválidos!");
+  }
 }
 
-function atualizarAgenda() {
-  limparRegistrosAntigos(); // mantém limpeza 2 dias após sepultamento
-  const tbody = document.querySelector('#agenda tbody');
-  tbody.innerHTML = '';
-  const registros = JSON.parse(localStorage.getItem('registros')) || [];
-  
-  // Se nenhum dia selecionado, usa o dia atual
-  const filtro = document.getElementById('filtroData').value || new Date().toISOString().split('T')[0];
+// Salvar sepultamento
+function salvar(){
+  let falecido = document.getElementById('falecido').value.trim().toUpperCase();
+  let setor = document.getElementById('setor').value.trim().toUpperCase();
+  let pendencia = document.getElementById('pendencia').value.trim().toUpperCase();
+  let exumacao = document.getElementById('exumacao').value.trim().toUpperCase();
+  let data = document.getElementById('data').value;
+  let horario = document.getElementById('horario').value;
 
-  horarios.forEach(h => {
-    const ocupacao = registros.find(r => r.data === filtro && r.horario === h);
-    const pendenciaText = ocupacao ? (ocupacao.pendencia.toLowerCase() === 'sim' ? 'Sim: '+ocupacao.pendencia : 'Não') : '';
-    tbody.innerHTML += `
-      <tr class="${ocupacao ? 'ocupado' : 'livre'}" 
-          onclick="${ocupacao ? `mostrarModal(registros.find(r=>r.data==='${filtro}'&&r.horario==='${h}'))` : ''}">
-        <td>${h}</td>
-        <td>${ocupacao ? ocupacao.falecido : ''}</td>
-        <td>${ocupacao ? ocupacao.data : ''}</td>
-        <td>${pendenciaText}</td>
-      </tr>
-    `;
-  });
-}
-
-function salvar() {
-  const falecido = document.getElementById('falecido').value.trim();
-  const setor = document.getElementById('setor').value.trim();
-  const pendencia = document.getElementById('pendencia').value.trim();
-  const data = document.getElementById('data').value;
-  const horario = document.getElementById('horario').value;
-
-  if(!falecido || !setor || !pendencia || !data || !horario){
+  if(!falecido||!setor||!pendencia||!exumacao||!data||!horario){
     return alert("Todos os campos são obrigatórios!");
   }
 
-  let registros = JSON.parse(localStorage.getItem('registros')) || [];
+  const agora = new Date();
+  const dataSelecionada = new Date(data + "T" + horario.replace('h',':') + ":00");
+  if(dataSelecionada <= agora){
+    return alert("Não é possível marcar um horário já passado no dia de hoje!");
+  }
 
-  if(registros.some(r => r.data === data && r.horario === horario)){
+  const maxData = new Date();
+  maxData.setDate(maxData.getDate()+5);
+  if(new Date(data) > maxData){
+    return alert("Só é possível marcar sepultamentos até 5 dias à frente!");
+  }
+
+  let registros = JSON.parse(localStorage.getItem('registros'))||[];
+  if(registros.some(r=>r.data===data && r.horario===horario)){
     return alert("Esse horário já foi reservado!");
   }
 
-  registros.push({ falecido, setor, pendencia, data, horario, usuario: usuarioLogado });
-  localStorage.setItem('registros', JSON.stringify(registros));
+  registros.push({ falecido,setor,pendencia,exumacao,data,horario,usuario:usuarioLogado });
+  localStorage.setItem('registros',JSON.stringify(registros));
 
   alert("Sepultamento cadastrado com sucesso!");
   document.getElementById('falecido').value = "";
   document.getElementById('setor').value = "";
   document.getElementById('pendencia').value = "";
+  document.getElementById('exumacao').value = "";
   document.getElementById('data').value = "";
   document.getElementById('horario').value = "";
 
   atualizarAgenda();
 }
 
-// Inicializa filtro com data atual
-document.getElementById('filtroData').value = new Date().toISOString().split('T')[0];
-atualizarAgenda();
-</script>
+// Atualiza agenda
+function atualizarAgenda(){
+  limparRegistrosAntigos();
+  const tbody = document.querySelector('#agenda tbody');
+  tbody.innerHTML = '';
+  const registros = JSON.parse(localStorage.getItem('registros'))||[];
+  const filtro = document.getElementById('filtroData').value || new Date().toISOString().split('T')[0];
 
+  horarios.forEach(h=>{
+    const ocupacao = registros.find(r=>r.data===filtro && r.horario===h);
+    const pendenciaText = ocupacao ? (ocupacao.pendencia==='SIM'?'Sim: '+ocupacao.pendencia:'Não'):'';
+    const exumacaoText = ocupacao ? ocupacao.exumacao:'';
+    tbody.innerHTML+=`
+      <tr class="${ocupacao?'ocupado':'livre'}" onclick="${ocupacao?`mostrarModal(registros.find(r=>r.data==='${filtro}'&&r.horario==='${h}'))`:''}">
+        <td>${h}</td>
+        <td>${ocupacao?ocupacao.falecido:''}</td>
+        <td>${ocupacao?ocupacao.setor:''}</td>
+        <td>${pendenciaText}</td>
+        <td>${exumacaoText}</td>
+      </tr>
+    `;
+  });
+}
+
+// Limpa registros 2 dias após sepultamento
+function limparRegistrosAntigos(){
+  let registros = JSON.parse(localStorage.getItem('registros'))||[];
+  const agora = new Date();
+  registros = registros.filter(r=> {
+    const dt = new Date(r.data + "T" + r.horario.replace('h',':') + ":00");
+    return (dt.getTime() + 2*24*60*60*1000) >= agora.getTime();
+  });
+  localStorage.setItem('registros',JSON.stringify(registros));
+}
+
+// Modal
+function mostrarModal(registro){
+  const modal = document.getElementById('modal');
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <p><strong>Falecido:</strong> ${registro.falecido}</p>
+    <p><strong>Usuario:</strong> ${registro.usuario}</p>
+    <p><strong>Setor:</strong> ${registro.setor}</p>
+    <p><strong>Pendência:</strong> ${registro.pendencia}</p>
+    <p><strong>Exumação:</strong> ${registro.exumacao}</p>
+  `;
+  modal.style.display="flex";
+}
+
+document.getElementById('closeModal').onclick=()=>{document.getElementById('modal').style.display='none';};
+</script>
 </body>
 </html>
