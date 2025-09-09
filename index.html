@@ -6,15 +6,14 @@
 <style>
   body { font-family: Arial, sans-serif; background: #fefefe; padding: 20px; }
   h1 { text-align: center; }
-  .container { display: flex; justify-content: space-around; margin-top: 20px; gap: 20px; }
-  .coluna { flex: 1; }
+  .container { display: flex; justify-content: space-around; margin-top: 20px; gap: 20px; flex-wrap: wrap; }
+  .coluna { flex: 1; min-width: 300px; }
   .coluna h2 { text-align: center; background: #eee; padding: 10px; border-radius: 6px; }
-  .card { border: 1px solid #ccc; padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  .card { border: 1px solid #ccc; padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
   .livre { background-color: #d4edda; }
   .ocupado { background-color: #f8d7da; }
-  button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
-  button:disabled { cursor: not-allowed; opacity: 0.6; }
-  .info { display: flex; flex-direction: column; margin-top: 5px; font-size: 0.9em; color: #333; }
+  .info input { width: 100%; margin: 4px 0; padding: 4px 6px; border-radius: 4px; border: 1px solid #999; }
+  button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
 </style>
 </head>
 <body>
@@ -36,7 +35,7 @@ const API_KEY = "patOFccvkTYdyuFT5";
 const BASE_ID = "app2lNLG6HAy5tHmx"; 
 const TABLE_NAME = "Agenda de Sepultamentos";
 
-// Puxa os registros
+// Puxa os registros do Airtable
 async function fetchAgenda() {
   const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?view=Grid%20view`, {
     headers: { "Authorization": `Bearer ${API_KEY}` }
@@ -45,7 +44,7 @@ async function fetchAgenda() {
   displayAgenda(data.records);
 }
 
-// Mostra os horários nas colunas
+// Mostra os horários em colunas
 function displayAgenda(records) {
   const manhaContainer = document.getElementById("manha");
   const tardeContainer = document.getElementById("tarde");
@@ -53,26 +52,25 @@ function displayAgenda(records) {
   tardeContainer.innerHTML = "";
 
   records.forEach(record => {
-    const { Horário, Status, Periodo, Falecido, Atendente, Setor } = record.fields;
+    const { Horário, Status, Periodo } = record.fields;
+    const falecido = record.fields.Falecido || "";
+    const atendente = record.fields.Atendente || "";
+    const pendencia = record.fields.Pendencia || "";
+    const setor = record.fields.Setor || "";
 
     const card = document.createElement("div");
     card.className = "card " + (Status === "Livre" ? "livre" : "ocupado");
 
-    let conteudo = `<span>${Horário} - ${Status}</span>`;
-
-    if(Status === "Ocupado") {
-      conteudo += `<div class="info">
-                    <div><strong>Falecido:</strong> ${Falecido}</div>
-                    <div><strong>Atendente:</strong> ${Atendente}</div>
-                    <div><strong>Setor:</strong> ${Setor}</div>
-                  </div>`;
-    }
-
-    const botaoReservar = Status === "Livre" 
-      ? `<button onclick="reservar('${record.id}')">Reservar</button>` 
-      : `<button disabled>Reservado</button>`;
-
-    card.innerHTML = conteudo + botaoReservar;
+    card.innerHTML = `
+      <div><strong>${Horário}</strong> - <span>${Status}</span></div>
+      <div class="info">
+        <input type="text" placeholder="Falecido" value="${falecido}" id="falecido-${record.id}" />
+        <input type="text" placeholder="Atendente" value="${atendente}" id="atendente-${record.id}" />
+        <input type="text" placeholder="Pendência" value="${pendencia}" id="pendencia-${record.id}" />
+        <input type="text" placeholder="Setor" value="${setor}" id="setor-${record.id}" />
+      </div>
+      <button onclick="salvarReserva('${record.id}')">Salvar</button>
+    `;
 
     let periodo = Periodo;
     if (!periodo) {
@@ -85,24 +83,21 @@ function displayAgenda(records) {
   });
 }
 
-// Reserva um horário
-async function reservar(recordId) {
-  const falecido = prompt("Nome do Falecido:");
-  if(!falecido) return alert("É obrigatório preencher o nome do falecido.");
+// Salva os dados editados direto no site
+async function salvarReserva(recordId) {
+  const falecido = document.getElementById(`falecido-${recordId}`).value;
+  const atendente = document.getElementById(`atendente-${recordId}`).value;
+  const pendencia = document.getElementById(`pendencia-${recordId}`).value;
+  const setor = document.getElementById(`setor-${recordId}`).value;
 
-  const atendente = prompt("Nome do Atendente:");
-  if(!atendente) return alert("É obrigatório preencher o nome do atendente.");
-
-  const pendencia = prompt("Possui pendência para o sepultamento? (Sim/Não):");
-  if(!pendencia) return alert("É obrigatório informar se há pendência.");
-
-  const setor = prompt("Setor do Sepultamento:");
-  if(!setor) return alert("É obrigatório preencher o setor do sepultamento.");
+  if (!falecido || !atendente || !pendencia || !setor) {
+    return alert("Todos os campos são obrigatórios!");
+  }
 
   const body = {
-    fields: { 
-      Falecido: falecido, 
-      Atendente: atendente, 
+    fields: {
+      Falecido: falecido,
+      Atendente: atendente,
       Pendencia: pendencia,
       Setor: setor,
       Status: "Ocupado"
@@ -118,7 +113,7 @@ async function reservar(recordId) {
     body: JSON.stringify(body)
   });
 
-  alert("Horário reservado com sucesso!");
+  alert("Reserva salva com sucesso!");
   fetchAgenda();
 }
 
