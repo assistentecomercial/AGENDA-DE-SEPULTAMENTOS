@@ -29,33 +29,8 @@
     <label for="setor">Setor:</label>
     <input type="text" id="setor" placeholder="Digite o setor">
 
-    <label for="atendente">Atendente:</label>
-    <select id="atendente">
-      <option value="">Selecione o atendente</option>
-      <option value="CARLOS">CARLOS</option>
-      <option value="DÁRVILLA">DÁRVILLA</option>
-      <option value="DIEGO">DIEGO</option>
-      <option value="EDER">EDER</option>
-      <option value="ELTON">ELTON</option>
-      <option value="GENTILBERTH">GENTILBERTH</option>
-      <option value="ILDEYLSON">ILDEYLSON</option>
-      <option value="JOSE">JOSE</option>
-      <option value="KARINE">KARINE</option>
-      <option value="LAURA">LAURA</option>
-      <option value="LUCIENE">LUCIENE</option>
-      <option value="LUIS">LUIS</option>
-      <option value="MANOELLY">MANOELLY</option>
-      <option value="MARCIO">MARCIO</option>
-      <option value="MILLENA">MILLENA</option>
-      <option value="PAULO">PAULO</option>
-      <option value="RAFAEL">RAFAEL</option>
-      <option value="RAFAELLE">RAFAELLE</option>
-      <option value="RICHARDS">RICHARDS</option>
-      <option value="TALITA">TALITA</option>
-      <option value="THALYSON">THALYSON</option>
-      <option value="VIVIAN">VIVIAN</option>
-      <option value="VIVIANE">VIVIANE</option>
-    </select>
+    <label for="pendencia">Possui Pendências?</label>
+    <input type="text" id="pendencia" placeholder="Sim/Não">
 
     <label for="data">Data do Sepultamento:</label>
     <input type="date" id="data" min="" max="">
@@ -93,6 +68,7 @@
           <th>Falecido</th>
           <th>Atendente</th>
           <th>Setor</th>
+          <th>Pendência</th>
         </tr>
       </thead>
       <tbody>
@@ -112,6 +88,8 @@
   inputData.max = maxData.toISOString().split('T')[0];
 
   const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
+
+  const usuarioLogado = sessionStorage.getItem('usuarioLogado') || 'Desconhecido';
 
   function limparRegistrosAntigos() {
     let registros = JSON.parse(localStorage.getItem('registros')) || [];
@@ -140,8 +118,9 @@
           <td>${h}</td>
           <td>${ocupacao ? 'Ocupado' : 'Livre'}</td>
           <td>${ocupacao ? ocupacao.falecido : ''}</td>
-          <td>${ocupacao ? ocupacao.atendente : ''}</td>
+          <td>${ocupacao ? ocupacao.usuario : ''}</td>
           <td>${ocupacao ? ocupacao.setor : ''}</td>
+          <td>${ocupacao ? ocupacao.pendencia : ''}</td>
         </tr>
       `;
     });
@@ -150,28 +129,28 @@
   function salvar() {
     const falecido = document.getElementById('falecido').value.trim();
     const setor = document.getElementById('setor').value.trim();
-    const atendente = document.getElementById('atendente').value;
+    const pendencia = document.getElementById('pendencia').value.trim();
     const data = document.getElementById('data').value;
     const horario = document.getElementById('horario').value;
 
-    if(!falecido || !setor || !atendente || !data || !horario){
+    if(!falecido || !setor || !pendencia || !data || !horario){
       return alert("Todos os campos são obrigatórios!");
     }
 
     let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
-    // Bloqueia se o horário já usado por qualquer atendente
+    // Bloqueia se o horário já usado
     if(registros.some(r => r.data === data && r.horario === horario)){
       return alert("Esse horário já foi reservado!");
     }
 
-    registros.push({ falecido, setor, atendente, data, horario });
+    registros.push({ falecido, setor, pendencia, data, horario, usuario: usuarioLogado });
     localStorage.setItem('registros', JSON.stringify(registros));
 
     alert("Sepultamento cadastrado com sucesso!");
     document.getElementById('falecido').value = "";
     document.getElementById('setor').value = "";
-    document.getElementById('atendente').value = "";
+    document.getElementById('pendencia').value = "";
     document.getElementById('data').value = "";
     document.getElementById('horario').value = "";
 
