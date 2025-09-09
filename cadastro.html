@@ -99,17 +99,20 @@ function limparRegistrosAntigos() {
 }
 
 function atualizarAgenda() {
-  limparRegistrosAntigos();
+  limparRegistrosAntigos(); // mantém limpeza 2 dias após sepultamento
   const tbody = document.querySelector('#agenda tbody');
   tbody.innerHTML = '';
   const registros = JSON.parse(localStorage.getItem('registros')) || [];
+  
+  // Se nenhum dia selecionado, usa o dia atual
   const filtro = document.getElementById('filtroData').value || new Date().toISOString().split('T')[0];
 
   horarios.forEach(h => {
     const ocupacao = registros.find(r => r.data === filtro && r.horario === h);
     const pendenciaText = ocupacao ? (ocupacao.pendencia.toLowerCase() === 'sim' ? 'Sim: '+ocupacao.pendencia : 'Não') : '';
     tbody.innerHTML += `
-      <tr class="${ocupacao ? 'ocupado' : 'livre'}" onclick="${ocupacao ? `alert('Atendente: ${ocupacao.usuario}\\nSetor: ${ocupacao.setor}')` : ''}">
+      <tr class="${ocupacao ? 'ocupado' : 'livre'}" 
+          onclick="${ocupacao ? `mostrarModal(registros.find(r=>r.data==='${filtro}'&&r.horario==='${h}'))` : ''}">
         <td>${h}</td>
         <td>${ocupacao ? ocupacao.falecido : ''}</td>
         <td>${ocupacao ? ocupacao.data : ''}</td>
