@@ -2,86 +2,108 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Cadastro de Sepultamento</title>
+<title>Cadastro e Agenda de Sepultamentos</title>
 <style>
   body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
   h1 { text-align: center; margin-bottom: 20px; }
-  .form-container { background: #fff; padding: 20px; border-radius: 8px; max-width: 500px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  .container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+  .form-container, .agenda-container { background: #fff; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
   label { display: block; margin: 10px 0 5px; }
   input, select { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc; }
   button { padding: 10px; width: 100%; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; }
-  .horario-livre { background-color: #d4edda; }
-  .horario-ocupado { background-color: #f8d7da; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  .livre { background-color: #d4edda; }
+  .ocupado { background-color: #f8d7da; }
 </style>
 </head>
 <body>
 
-<h1>Cadastro de Sepultamento</h1>
-<div class="form-container">
-  <label for="falecido">Nome do Falecido:</label>
-  <input type="text" id="falecido" placeholder="Digite o nome do falecido">
+<h1>Cadastro e Agenda de Sepultamentos</h1>
+<div class="container">
+  <div class="form-container">
+    <h2>Cadastrar Sepultamento</h2>
+    <label for="falecido">Nome do Falecido:</label>
+    <input type="text" id="falecido" placeholder="Digite o nome do falecido">
 
-  <label for="setor">Setor:</label>
-  <input type="text" id="setor" placeholder="Digite o setor">
+    <label for="setor">Setor:</label>
+    <input type="text" id="setor" placeholder="Digite o setor">
 
-  <label for="atendente">Atendente:</label>
-  <select id="atendente">
-    <option value="">Selecione o atendente</option>
-    <option value="CARLOS">CARLOS</option>
-    <option value="DÁRVILLA">DÁRVILLA</option>
-    <option value="DIEGO">DIEGO</option>
-    <option value="EDER">EDER</option>
-    <option value="ELTON">ELTON</option>
-    <option value="GENTILBERTH">GENTILBERTH</option>
-    <option value="ILDEYLSON">ILDEYLSON</option>
-    <option value="JOSE">JOSE</option>
-    <option value="KARINE">KARINE</option>
-    <option value="LAURA">LAURA</option>
-    <option value="LUCIENE">LUCIENE</option>
-    <option value="LUIS">LUIS</option>
-    <option value="MANOELLY">MANOELLY</option>
-    <option value="MARCIO">MARCIO</option>
-    <option value="MILLENA">MILLENA</option>
-    <option value="PAULO">PAULO</option>
-    <option value="RAFAEL">RAFAEL</option>
-    <option value="RAFAELLE">RAFAELLE</option>
-    <option value="RICHARDS">RICHARDS</option>
-    <option value="TALITA">TALITA</option>
-    <option value="THALYSON">THALYSON</option>
-    <option value="VIVIAN">VIVIAN</option>
-    <option value="VIVIANE">VIVIANE</option>
-  </select>
+    <label for="atendente">Atendente:</label>
+    <select id="atendente">
+      <option value="">Selecione o atendente</option>
+      <option value="CARLOS">CARLOS</option>
+      <option value="DÁRVILLA">DÁRVILLA</option>
+      <option value="DIEGO">DIEGO</option>
+      <option value="EDER">EDER</option>
+      <option value="ELTON">ELTON</option>
+      <option value="GENTILBERTH">GENTILBERTH</option>
+      <option value="ILDEYLSON">ILDEYLSON</option>
+      <option value="JOSE">JOSE</option>
+      <option value="KARINE">KARINE</option>
+      <option value="LAURA">LAURA</option>
+      <option value="LUCIENE">LUCIENE</option>
+      <option value="LUIS">LUIS</option>
+      <option value="MANOELLY">MANOELLY</option>
+      <option value="MARCIO">MARCIO</option>
+      <option value="MILLENA">MILLENA</option>
+      <option value="PAULO">PAULO</option>
+      <option value="RAFAEL">RAFAEL</option>
+      <option value="RAFAELLE">RAFAELLE</option>
+      <option value="RICHARDS">RICHARDS</option>
+      <option value="TALITA">TALITA</option>
+      <option value="THALYSON">THALYSON</option>
+      <option value="VIVIAN">VIVIAN</option>
+      <option value="VIVIANE">VIVIANE</option>
+    </select>
 
-  <label for="data">Data do Sepultamento:</label>
-  <input type="date" id="data" min="" max="">
+    <label for="data">Data do Sepultamento:</label>
+    <input type="date" id="data" min="" max="">
 
-  <label for="horario">Horário:</label>
-  <select id="horario">
-    <option value="">Selecione o horário</option>
-    <option value="09h00">09h00</option>
-    <option value="09h20">09h20</option>
-    <option value="09h40">09h40</option>
-    <option value="10h00">10h00</option>
-    <option value="10h20">10h20</option>
-    <option value="10h40">10h40</option>
-    <option value="11h00">11h00</option>
-    <option value="14h20">14h20</option>
-    <option value="14h40">14h40</option>
-    <option value="15h00">15h00</option>
-    <option value="15h20">15h20</option>
-    <option value="15h40">15h40</option>
-    <option value="16h00">16h00</option>
-    <option value="16h20">16h20</option>
-    <option value="16h40">16h40</option>
-  </select>
+    <label for="horario">Horário:</label>
+    <select id="horario">
+      <option value="">Selecione o horário</option>
+      <option value="09h00">09h00</option>
+      <option value="09h20">09h20</option>
+      <option value="09h40">09h40</option>
+      <option value="10h00">10h00</option>
+      <option value="10h20">10h20</option>
+      <option value="10h40">10h40</option>
+      <option value="11h00">11h00</option>
+      <option value="14h20">14h20</option>
+      <option value="14h40">14h40</option>
+      <option value="15h00">15h00</option>
+      <option value="15h20">15h20</option>
+      <option value="15h40">15h40</option>
+      <option value="16h00">16h00</option>
+      <option value="16h20">16h20</option>
+      <option value="16h40">16h40</option>
+    </select>
 
-  <button onclick="salvar()">Salvar Sepultamento</button>
+    <button onclick="salvar()">Salvar Sepultamento</button>
+  </div>
+
+  <div class="agenda-container">
+    <h2>Agenda do Dia</h2>
+    <table id="agenda">
+      <thead>
+        <tr>
+          <th>Horário</th>
+          <th>Status</th>
+          <th>Falecido</th>
+          <th>Atendente</th>
+          <th>Setor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Horários preenchidos pelo JS -->
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <script>
-  // Define datas mínima e máxima (hoje até +5 dias)
+  // Datas mínima e máxima (hoje até +5 dias)
   const inputData = document.getElementById('data');
   const hoje = new Date();
   const maxData = new Date();
@@ -89,7 +111,42 @@
   inputData.min = hoje.toISOString().split('T')[0];
   inputData.max = maxData.toISOString().split('T')[0];
 
-  // Função para salvar no localStorage (temporário)
+  const horarios = ["09h00","09h20","09h40","10h00","10h20","10h40","11h00","14h20","14h40","15h00","15h20","15h40","16h00","16h20","16h40"];
+
+  function limparRegistrosAntigos() {
+    let registros = JSON.parse(localStorage.getItem('registros')) || [];
+    const agora = new Date();
+    registros = registros.filter(r => {
+      const [hora, min] = r.horario.split('h').map(Number);
+      const dataSep = new Date(r.data);
+      dataSep.setHours(hora, min, 0, 0);
+      dataSep.setDate(dataSep.getDate() + 2); // mantém 2 dias após
+      return dataSep > agora;
+    });
+    localStorage.setItem('registros', JSON.stringify(registros));
+  }
+
+  function atualizarAgenda() {
+    limparRegistrosAntigos();
+    const tbody = document.querySelector('#agenda tbody');
+    tbody.innerHTML = '';
+    const registros = JSON.parse(localStorage.getItem('registros')) || [];
+    const hojeStr = new Date().toISOString().split('T')[0];
+
+    horarios.forEach(h => {
+      const ocupacao = registros.find(r => r.data === hojeStr && r.horario === h);
+      tbody.innerHTML += `
+        <tr class="${ocupacao ? 'ocupado' : 'livre'}">
+          <td>${h}</td>
+          <td>${ocupacao ? 'Ocupado' : 'Livre'}</td>
+          <td>${ocupacao ? ocupacao.falecido : ''}</td>
+          <td>${ocupacao ? ocupacao.atendente : ''}</td>
+          <td>${ocupacao ? ocupacao.setor : ''}</td>
+        </tr>
+      `;
+    });
+  }
+
   function salvar() {
     const falecido = document.getElementById('falecido').value.trim();
     const setor = document.getElementById('setor').value.trim();
@@ -103,7 +160,7 @@
 
     let registros = JSON.parse(localStorage.getItem('registros')) || [];
 
-    // Verifica se o horário já foi usado na mesma data
+    // Bloqueia se o horário já usado por qualquer atendente
     if(registros.some(r => r.data === data && r.horario === horario)){
       return alert("Esse horário já foi reservado!");
     }
@@ -112,13 +169,17 @@
     localStorage.setItem('registros', JSON.stringify(registros));
 
     alert("Sepultamento cadastrado com sucesso!");
-    // Limpa campos
     document.getElementById('falecido').value = "";
     document.getElementById('setor').value = "";
     document.getElementById('atendente').value = "";
     document.getElementById('data').value = "";
     document.getElementById('horario').value = "";
+
+    atualizarAgenda();
   }
+
+  // Atualiza agenda ao carregar a página
+  atualizarAgenda();
 </script>
 
 </body>
