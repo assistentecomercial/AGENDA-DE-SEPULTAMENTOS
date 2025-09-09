@@ -2,118 +2,60 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Agenda de Sepultamentos</title>
+<title>Login - Agenda de Sepultamentos</title>
 <style>
-  body { font-family: Arial, sans-serif; background: #fefefe; padding: 20px; }
-  h1 { text-align: center; }
-  .container { display: flex; justify-content: space-around; margin-top: 20px; gap: 20px; flex-wrap: wrap; }
-  .coluna { flex: 1; min-width: 300px; }
-  .coluna h2 { text-align: center; background: #eee; padding: 10px; border-radius: 6px; }
-  .card { border: 1px solid #ccc; padding: 12px; margin: 8px 0; border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
-  .livre { background-color: #d4edda; }
-  .ocupado { background-color: #f8d7da; }
-  .info input { width: 100%; margin: 4px 0; padding: 4px 6px; border-radius: 4px; border: 1px solid #999; }
-  button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; align-self: flex-start; }
+  body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
+  .login-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; text-align: center; }
+  .login-container h1 { margin-bottom: 20px; }
+  select, input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+  button { width: 100%; padding: 10px; border: none; border-radius: 6px; background: green; color: white; font-size: 16px; cursor: pointer; }
 </style>
 </head>
 <body>
 
-<h1>Agenda de Sepultamentos</h1>
-<div class="container">
-  <div class="coluna">
-    <h2>🌅 Manhã</h2>
-    <div id="manha"></div>
-  </div>
-  <div class="coluna">
-    <h2>🌇 Tarde</h2>
-    <div id="tarde"></div>
-  </div>
+<div class="login-container">
+  <h1>Login</h1>
+  <select id="usuario">
+    <option value="">Selecione o usuário</option>
+    <option value="CARLOS">CARLOS</option>
+    <option value="DÁRVILLA">DÁRVILLA</option>
+    <option value="DIEGO">DIEGO</option>
+    <option value="EDER">EDER</option>
+    <option value="ELTON">ELTON</option>
+    <option value="GENTILBERTH">GENTILBERTH</option>
+    <option value="ILDEYLSON">ILDEYLSON</option>
+    <option value="JOSE">JOSE</option>
+    <option value="KARINE">KARINE</option>
+    <option value="LAURA">LAURA</option>
+    <option value="LUCIENE">LUCIENE</option>
+    <option value="LUIS">LUIS</option>
+    <option value="MANOELLY">MANOELLY</option>
+    <option value="MARCIO">MARCIO</option>
+    <option value="MILLENA">MILLENA</option>
+    <option value="PAULO">PAULO</option>
+    <option value="RAFAEL">RAFAEL</option>
+    <option value="RAFAELLE">RAFAELLE</option>
+    <option value="RICHARDS">RICHARDS</option>
+    <option value="TALITA">TALITA</option>
+    <option value="THALYSON">THALYSON</option>
+    <option value="VIVIAN">VIVIAN</option>
+    <option value="VIVIANE">VIVIANE</option>
+  </select>
+  <input type="password" id="senha" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
 </div>
 
 <script>
-const API_KEY = "patOFccvkTYdyuFT5"; 
-const BASE_ID = "app2lNLG6HAy5tHmx"; 
-const TABLE_NAME = "Agenda de Sepultamentos";
+function login() {
+  const usuario = document.getElementById('usuario').value;
+  const senha = document.getElementById('senha').value;
 
-// Puxa os registros do Airtable
-async function fetchAgenda() {
-  const res = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?view=Grid%20view`, {
-    headers: { "Authorization": `Bearer ${API_KEY}` }
-  });
-  const data = await res.json();
-  displayAgenda(data.records);
+  if(!usuario) return alert("Selecione um usuário.");
+  if(senha !== "Complexo@") return alert("Senha incorreta!");
+
+  // Redireciona para a página de cadastro do falecido
+  window.location.href = "cadastro.html";
 }
-
-// Mostra os horários em colunas
-function displayAgenda(records) {
-  const manhaContainer = document.getElementById("manha");
-  const tardeContainer = document.getElementById("tarde");
-  manhaContainer.innerHTML = "";
-  tardeContainer.innerHTML = "";
-
-  records.forEach(record => {
-    // Ajuste dos nomes de campo de acordo com o Airtable
-    const Horarios = record.fields.Horarios || "";
-    const Status = record.fields.Status || "Livre";
-    const Periodo = record.fields["Período"] || "";
-    const Falecido = record.fields.Falecido || "";
-    const Atendente = record.fields.Atendente || "";
-
-    const card = document.createElement("div");
-    card.className = "card " + (Status === "Livre" ? "livre" : "ocupado");
-
-    card.innerHTML = `
-      <div><strong>${Horarios}</strong> - <span>${Status}</span></div>
-      <div class="info">
-        <input type="text" placeholder="Falecido" value="${Falecido}" id="falecido-${record.id}" />
-        <input type="text" placeholder="Atendente" value="${Atendente}" id="atendente-${record.id}" />
-      </div>
-      <button onclick="salvarReserva('${record.id}')">Salvar</button>
-    `;
-
-    let periodo = Periodo.trim();
-    if (!periodo) {
-      const horaNum = parseInt(Horarios.split("h")[0], 10);
-      periodo = horaNum < 12 ? "Manhã" : "Tarde";
-    }
-
-    if (periodo === "Manhã") manhaContainer.appendChild(card);
-    else tardeContainer.appendChild(card);
-  });
-}
-
-// Salva os dados editados direto no site
-async function salvarReserva(recordId) {
-  const falecido = document.getElementById(`falecido-${recordId}`).value;
-  const atendente = document.getElementById(`atendente-${recordId}`).value;
-
-  if (!falecido || !atendente) {
-    return alert("Todos os campos são obrigatórios!");
-  }
-
-  const body = {
-    fields: {
-      Falecido: falecido,
-      Atendente: atendente,
-      Status: "Ocupado"
-    }
-  };
-
-  await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${recordId}`, {
-    method: "PATCH",
-    headers: {
-      "Authorization": `Bearer ${API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
-
-  alert("Reserva salva com sucesso!");
-  fetchAgenda();
-}
-
-// Carrega agenda ao abrir
-fetchAgenda();
 </script>
 
 </body>
