@@ -3,11 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <title>Agendamento - Sistema de Sepultamentos</title>
-<link rel="stylesheet" href="style.css">
+<style>
+body {
+  font-family: Garamond, serif;
+  background: #f0f2f5;
+  margin:0;
+  padding:20px;
+  display:flex;
+  justify-content:center;
+}
+.container {
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  max-width:1200px;
+  width:100%;
+}
+/* Agendamento / Lista */
+.agenda, .lista {
+  background:white;
+  border-radius:12px;
+  padding:20px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  flex:1 1 400px;
+}
+/* Títulos */
+h2 { color:#28a745; text-align:center; margin-bottom:15px; }
+/* Inputs e Botões */
+label { font-weight:bold; display:block; margin-top:10px; }
+input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+button { background:#28a745; color:white; border:none; cursor:pointer; transition:0.2s; }
+button:hover { background:#218838; transform:scale(1.02); }
+/* Horários */
+#horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.hora {
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  flex:1 0 80px;
+  text-align:center;
+  background:#e9ecef;
+  transition:0.2s;
+  position: relative;
+}
+.hora:hover { transform:translateY(-2px) scale(1.05); background:#d4edda; }
+.hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
+/* Tooltip */
+.hora[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+/* Resumo */
+#resumo { display:block; margin-top:20px; padding:15px; border-radius:12px; background:#f8f9fa; border:1px solid #ccc; }
+/* Admin Controles */
+.admin-controles { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f1f1f1; border:1px solid #666; }
+/* Lista lateral */
+.lista-sepultamentos { margin-top:10px; max-height:500px; overflow-y:auto; }
+.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; }
+.lista-sepultamentos .card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+.lista-sepultamentos .card h4 { margin:0 0 5px 0; color:#28a745; }
+/* Responsividade */
+@media(max-width:900px){ .container{flex-direction:column;} }
+</style>
 </head>
 <body>
 
 <div class="container">
+  <!-- Coluna de agendamento -->
   <div class="agenda">
     <h2>Agendamento de Sepultamentos</h2>
 
@@ -40,15 +114,146 @@
     <button onclick="confirmarAgendamento()">Confirmar</button>
 
     <div id="resumo"></div>
-    <div id="adminControles" class="admin-controles">Você é admin, pode desbloquear horários clicando neles</div>
+    <div id="adminControles" class="admin-controles"></div>
   </div>
 
+  <!-- Coluna de lista de sepultamentos do dia -->
   <div class="lista">
     <h2>Sepultamentos do Dia</h2>
     <div id="listaDia" class="lista-sepultamentos"></div>
   </div>
 </div>
 
-<script src="agendamento.js"></script>
+<script>
+const horariosPadrao = [
+  "09:00","09:20","09:40","10:00","10:20","10:40","11:00",
+  "14:20","14:40","15:00","15:20","15:40","16:00","16:20","16:40"
+];
+
+let agendamentos = []; // Armazena todos os agendamentos em memória
+let horarioSelecionado = null;
+const dataInput = document.getElementById("data");
+const resumoEl = document.getElementById("resumo");
+
+const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+if(isAdmin) document.getElementById("adminControles").style.display="block";
+
+// Limita datas (hoje até 5 dias à frente)
+const hoje = new Date();
+const maxData = new Date();
+maxData.setDate(hoje.getDate() + 5);
+dataInput.min = hoje.toISOString().split("T")[0];
+dataInput.max = maxData.toISOString().split("T")[0];
+
+dataInput.addEventListener("change", () => {
+  if(!dataInput.value){
+    document.getElementById("horarios").innerHTML = "Escolha uma data para ver os horários disponíveis";
+  } else {
+    gerarHorarios();
+    mostrarSepultamentosDia();
+  }
+});
+
+function gerarHorarios(){
+  const data = dataInput.value;
+  const container = document.getElementById("horarios");
+  container.innerHTML = "";
+  horarioSelecionado = null;
+  if(!data) return;
+
+  const ocupados = agendamentos.filter(a=>a.Data===data);
+
+  horariosPadrao.forEach(hora => {
+    const div = document.createElement("div");
+    div.classList.add("hora");
+    div.textContent = hora;
+
+    const registroOcupado = ocupados.find(r => r.Hora===hora);
+    if(registroOcupado){
+      div.classList.add("ocupado");
+      div.dataset.tooltip = `${registroOcupado.Falecido} (${registroOcupado.Pendencias})`;
+      if(isAdmin){
+        div.title = "Clique para desbloquear (Admin)";
+        div.onclick = () => {
+          if(confirm(`Desbloquear horário ${hora}?`)){
+            agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
+            gerarHorarios();
+            mostrarSepultamentosDia();
+          }
+        };
+      }
+    } else {
+      div.onclick = () => selecionarHorario(div,hora);
+    }
+
+    container.appendChild(div);
+  });
+}
+
+function selecionarHorario(div,hora){
+  document.querySelectorAll(".hora").forEach(h => h.classList.remove("selecionado"));
+  div.classList.add("selecionado");
+  horarioSelecionado = hora;
+  atualizarResumo();
+}
+
+function mostrarSepultamentosDia(){
+  const data = dataInput.value;
+  const listaEl = document.getElementById("listaDia");
+  listaEl.innerHTML = "";
+  if(!data) return;
+
+  const doDia = agendamentos.filter(a=>a.Data===data);
+  doDia.forEach(r=>{
+    const card = document.createElement("div");
+    card.classList.add("card");
+    card.innerHTML=`<h4>${r.Hora}</h4>
+                    <p>${r.Falecido}</p>
+                    <p>${r.Setor || "Sem setor"}</p>`;
+    listaEl.appendChild(card);
+  });
+}
+
+function confirmarAgendamento(){
+  const data = dataInput.value;
+  const falecido = document.getElementById("falecido").value;
+  const pendencias = document.getElementById("pendencias").value;
+  const descPendencia = document.getElementById("descPendencia").value;
+  const exumacao = document.getElementById("exumacao").value;
+  const setor = document.getElementById("setor").value;
+
+  if(!data || !horarioSelecionado || !falecido){
+    alert("Preencha todos os campos e selecione um horário!");
+    return;
+  }
+
+  agendamentos.push({
+    Data:data,
+    Hora:horarioSelecionado,
+    Falecido:falecido,
+    Pendencias:pendencias,
+    DescPendencia:descPendencia,
+    Exumacao:exumacao,
+    Setor:setor,
+    Atendente:usuarioLogado
+  });
+
+  gerarHorarios();
+  mostrarSepultamentosDia();
+  atualizarResumo();
+}
+
+function atualizarResumo(){
+  const falecido = document.getElementById("falecido").value;
+  resumoEl.innerHTML=`<h3>Resumo do Agendamento</h3>
+    <p><b>Data:</b> ${dataInput.value || "-"}</p>
+    <p><b>Hora:</b> ${horarioSelecionado || "-"}</p>
+    <p><b>Falecido:</b> ${falecido || "-"}</p>
+    <p><b>Atendente:</b> ${usuarioLogado || "-"}</p>`;
+}
+</script>
+
 </body>
 </html>
