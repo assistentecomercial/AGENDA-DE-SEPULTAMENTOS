@@ -71,10 +71,11 @@ function gerarHorarios(){
         };
       }
     } else {
-      // Bloquear apenas horários retroativos do dia atual
+      // Bloqueia horários passados apenas do dia atual
       const [h,m] = hora.split(":").map(Number);
       const dtHorario = new Date(data);
       dtHorario.setHours(h,m,0,0);
+
       if(data === hojeStr && dtHorario < agora){
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
@@ -106,9 +107,8 @@ function selecionarHorario(div,hora){
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
   const contrato = document.getElementById("contrato").value || "-";
-  let gavetas = document.getElementById("gavetas").value || "-";
-  if(gavetas > 3) gavetas = 3; // Limite de 3 gavetas
-
+  let gavetas = parseInt(document.getElementById("gavetas").value) || "-";
+  if(gavetas > 3) gavetas = 3;
   resumoEl.innerHTML=`
     <h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
@@ -123,9 +123,9 @@ function atualizarResumo(){
 function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value.trim();
-  let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
-  if(gavetas > 3) gavetas = 3; // Limite de 3 gavetas
   const contrato = document.getElementById("contrato").value;
+  let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
+  if(gavetas > 3) gavetas = 3;
   const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
@@ -137,7 +137,6 @@ function confirmarAgendamento(){
     return;
   }
 
-  // Evitar duplicidade de falecido
   if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
     alert("Este falecido já está agendado!");
     return;
@@ -188,16 +187,6 @@ function mostrarSepultamentosDia(){
       div.classList.add("cardAgendamento");
       div.textContent=`${a.Hora} - ${a.Falecido}`;
       div.onclick = ()=> abrirModal(a);
-
-      // Alertar se o horário se aproxima (menos de 1h)
-      const agora = new Date();
-      const [h,m] = a.Hora.split(":").map(Number);
-      const dtAg = new Date(a.Data);
-      dtAg.setHours(h,m,0,0);
-      if(dtAg - agora <= 3600000 && dtAg - agora > 0){
-        div.style.background = "#dc3545"; // Vermelho para próximo
-        div.style.color = "#fff";
-      }
 
       if(isAdmin){
         const btn = document.createElement("button"); btn.textContent="Excluir"; btn.classList.add("excluir");
