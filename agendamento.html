@@ -40,6 +40,8 @@ button:hover { background:#218838; transform:scale(1.02); }
 .cardAgendamento:hover { transform:scale(1.02); background:#d4edda; }
 button.excluir { background:#dc3545; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; margin-left:5px; }
 button.editar { background:#ffc107; color:black; border:none; padding:2px 6px; border-radius:4px; cursor:pointer; margin-left:5px; }
+.row { display:flex; gap:10px; }
+.row input { flex:1; }
 @media(max-width:900px){ .container{flex-direction:column;} }
 </style>
 </head>
@@ -59,8 +61,22 @@ button.editar { background:#ffc107; color:black; border:none; padding:2px 6px; b
 
     <div id="horarios">Escolha uma data para ver os horários disponíveis</div>
 
+    <div class="row">
+      <div>
+        <label for="contrato">Nº Contrato:</label>
+        <input type="text" id="contrato">
+      </div>
+      <div>
+        <label for="gavetas">Qtde. Gavetas:</label>
+        <input type="number" id="gavetas" min="1">
+      </div>
+    </div>
+
     <label>Nome do Falecido:</label>
     <input type="text" id="falecido">
+
+    <label>Titular:</label>
+    <input type="text" id="titular">
 
     <label>Pendências:</label>
     <select id="pendencias">
@@ -178,20 +194,26 @@ function atualizarResumo(){
   resumoEl.innerHTML=`<h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
     <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
+    <p><b>Contrato:</b> ${document.getElementById("contrato").value||"-"}</p>
     <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
+    <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
+    <p><b>Gavetas:</b> ${document.getElementById("gavetas").value||"-"}</p>
     <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>`;
 }
 
 function confirmarAgendamento(){
   const data = dataInput.value;
+  const contrato = document.getElementById("contrato").value;
+  const gavetas = document.getElementById("gavetas").value;
   const falecido = document.getElementById("falecido").value;
+  const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
   const exumacao = document.getElementById("exumacao").value;
   const setor = document.getElementById("setor").value;
-  if(!data||!horarioSelecionado||!falecido){ alert("Preencha todos os campos e selecione um horário!"); return; }
+  if(!data||!horarioSelecionado||!falecido){ alert("Preencha todos os campos obrigatórios e selecione um horário!"); return; }
 
-  agendamentos.push({Data:data,Hora:horarioSelecionado,Falecido:falecido,Pendencias:pendencias,DescPendencia:descPendencia,Exumacao:exumacao,Setor:setor,Atendente:usuarioLogado});
+  agendamentos.push({Data:data,Hora:horarioSelecionado,Contrato:contrato,Gavetas:gavetas,Falecido:falecido,Titular:titular,Pendencias:pendencias,DescPendencia:descPendencia,Exumacao:exumacao,Setor:setor,Atendente:usuarioLogado});
   localStorage.setItem("agendamentos",JSON.stringify(agendamentos));
   gerarHorarios(); mostrarSepultamentosDia(); atualizarResumo();
 }
@@ -241,6 +263,9 @@ function abrirModal(a){
   info.innerHTML=`<h3>${a.Falecido}</h3>
                   <p><b>Data:</b> ${a.Data}</p>
                   <p><b>Hora:</b> ${a.Hora}</p>
+                  <p><b>Contrato:</b> ${a.Contrato||"-"}</p>
+                  <p><b>Titular:</b> ${a.Titular||"-"}</p>
+                  <p><b>Gavetas:</b> ${a.Gavetas||"-"}</p>
                   <p><b>Pendências:</b> ${a.Pendencias}</p>
                   <p><b>Descrição:</b> ${a.DescPendencia||"-"}</p>
                   <p><b>Exumação:</b> ${a.Exumacao}</p>
@@ -255,7 +280,10 @@ function editarAgendamento(a){
   dataInput.value = a.Data;
   gerarHorarios();
   setTimeout(()=>{ const divHora = Array.from(document.querySelectorAll(".hora")).find(h=>h.textContent===a.Hora); if(divHora) selecionarHorario(divHora,a.Hora); },50);
+  document.getElementById("contrato").value = a.Contrato;
+  document.getElementById("gavetas").value = a.Gavetas;
   document.getElementById("falecido").value = a.Falecido;
+  document.getElementById("titular").value = a.Titular;
   document.getElementById("pendencias").value = a.Pendencias;
   document.getElementById("descPendencia").value = a.DescPendencia;
   document.getElementById("exumacao").value = a.Exumacao;
