@@ -12,13 +12,13 @@ let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
-const gavetasInput = document.getElementById("gavetas");
 
 // ===== CONFIGURAÇÕES DE DATA =====
 const hoje = new Date();
+const hojeStr = hoje.toISOString().split("T")[0];
 const maxData = new Date();
 maxData.setDate(hoje.getDate()+5);
-dataInput.min = hoje.toISOString().split("T")[0];
+dataInput.min = hojeStr;
 dataInput.max = maxData.toISOString().split("T")[0];
 
 // ===== LIMPAR AGENDAMENTOS EXPIRADOS =====
@@ -34,12 +34,6 @@ function limparAgendamentosExpirados(){
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
 }
 limparAgendamentosExpirados();
-
-// ===== INPUT GAVETAS =====
-gavetasInput.setAttribute("max", 3);
-gavetasInput.addEventListener("input", ()=>{
-  if(Number(gavetasInput.value) > 3) gavetasInput.value = 3;
-});
 
 // ===== EVENTOS =====
 dataInput.addEventListener("change", ()=>{
@@ -57,7 +51,6 @@ function gerarHorarios(){
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
   const agora = new Date();
-  const hojeStr = hoje.toISOString().split("T")[0];
 
   function criarHorarioDiv(hora, periodo){
     const div = document.createElement("div");
@@ -78,11 +71,10 @@ function gerarHorarios(){
         };
       }
     } else {
+      // Bloquear apenas horários retroativos do dia atual
       const [h,m] = hora.split(":").map(Number);
       const dtHorario = new Date(data);
       dtHorario.setHours(h,m,0,0);
-
-      // Bloquear apenas horários retroativos do dia atual
       if(data === hojeStr && dtHorario < agora){
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
@@ -90,15 +82,6 @@ function gerarHorarios(){
         div.onclick = () => selecionarHorario(div,hora);
       }
     }
-
-    // Aviso visual: se o horário for dentro de 30 minutos do atual, sinal de alerta
-    if(data === hojeStr){
-      const diffMin = (new Date(data + "T" + hora) - agora)/60000;
-      if(diffMin >= 0 && diffMin <= 30){
-        div.style.border = "2px solid red";
-      }
-    }
-
     return div;
   }
 
@@ -123,7 +106,9 @@ function selecionarHorario(div,hora){
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
   const contrato = document.getElementById("contrato").value || "-";
-  const gavetas = document.getElementById("gavetas").value || "-";
+  let gavetas = document.getElementById("gavetas").value || "-";
+  if(gavetas > 3) gavetas = 3; // Limite de 3 gavetas
+
   resumoEl.innerHTML=`
     <h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
@@ -138,8 +123,9 @@ function atualizarResumo(){
 function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value.trim();
+  let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
+  if(gavetas > 3) gavetas = 3; // Limite de 3 gavetas
   const contrato = document.getElementById("contrato").value;
-  const gavetas = Number(document.getElementById("gavetas").value);
   const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
@@ -151,11 +137,7 @@ function confirmarAgendamento(){
     return;
   }
 
-  if(gavetas > 3){
-    alert("Máximo de 3 gavetas permitido!");
-    return;
-  }
-
+  // Evitar duplicidade de falecido
   if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
     alert("Este falecido já está agendado!");
     return;
@@ -206,6 +188,16 @@ function mostrarSepultamentosDia(){
       div.classList.add("cardAgendamento");
       div.textContent=`${a.Hora} - ${a.Falecido}`;
       div.onclick = ()=> abrirModal(a);
+
+      // Alertar se o horário se aproxima (menos de 1h)
+      const agora = new Date();
+      const [h,m] = a.Hora.split(":").map(Number);
+      const dtAg = new Date(a.Data);
+      dtAg.setHours(h,m,0,0);
+      if(dtAg - agora <= 3600000 && dtAg - agora > 0){
+        div.style.background = "#dc3545"; // Vermelho para próximo
+        div.style.color = "#fff";
+      }
 
       if(isAdmin){
         const btn = document.createElement("button"); btn.textContent="Excluir"; btn.classList.add("excluir");
