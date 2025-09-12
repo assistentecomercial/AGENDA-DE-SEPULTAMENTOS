@@ -1,0 +1,84 @@
+/* Reset básico */
+* { margin:0; padding:0; box-sizing:border-box; font-family: 'Garamond', serif; }
+
+/* Body */
+body {
+  background: #f0f2f5;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Container */
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Agendamento / Lista */
+.agenda, .lista {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  flex: 1 1 400px;
+}
+
+/* Títulos */
+h2 { color:#28a745; text-align:center; margin-bottom:15px; }
+
+/* Inputs e Botões */
+label { font-weight:bold; display:block; margin-top:10px; }
+input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
+button { background:#28a745; color:white; border:none; cursor:pointer; transition:0.2s; }
+button:hover { background:#218838; transform:scale(1.02); }
+
+/* Horários */
+#horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.hora {
+  padding:12px;
+  border-radius:12px;
+  cursor:pointer;
+  flex:1 0 80px;
+  text-align:center;
+  background:#e9ecef;
+  transition:0.2s;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  position: relative;
+}
+.hora:hover { transform:translateY(-2px) scale(1.05); background:#d4edda; }
+.hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
+.hora[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-size: 12px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Resumo */
+#resumo { display:block; margin-top:20px; padding:15px; border-radius:12px; background:#f8f9fa; border:1px solid #ccc; }
+
+/* Admin Controles */
+.admin-controles { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f1f1f1; border:1px solid #666; }
+
+/* Lista lateral */
+.lista-sepultamentos { margin-top:10px; max-height:500px; overflow-y:auto; }
+.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; }
+.lista-sepultamentos .card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+.lista-sepultamentos .card h4 { margin:0 0 5px 0; color:#28a745; }
+
+/* Responsividade */
+@media(max-width:900px){ .container{flex-direction:column;} }
