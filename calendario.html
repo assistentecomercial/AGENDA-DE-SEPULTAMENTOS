@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Calendário de Sepultamentos</title>
+<style>
+body {
+  font-family: Garamond, serif;
+  background:#f0f2f5;
+  margin:0;
+  padding:20px;
+}
+.topo {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+.topo h2 { color:#28a745; }
+.topo button {
+  background:#28a745;
+  color:white;
+  border:none;
+  padding:10px 15px;
+  border-radius:8px;
+  cursor:pointer;
+  transition:0.2s;
+}
+.topo button:hover { background:#218838; }
+
+/* CONTAINER PRINCIPAL */
+.container {
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+/* QUADRO DE SEPULTAMENTOS */
+.cardDia {
+  background:#f8f9fa;
+  border:1px solid #ccc;
+  border-radius:12px;
+  padding:10px;
+  flex:1 1 180px;
+}
+.cardDia h4 { text-align:center; color:#28a745; margin-top:0; }
+.cardAgendamento {
+  background:#e9ecef;
+  padding:6px;
+  margin:4px 0;
+  border-radius:8px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  transition:0.2s;
+}
+.cardAgendamento:hover { transform:scale(1.02); }
+.cardAgendamento.alerta { background:#dc3545; color:white; font-weight:bold; }
+
+/* RESPONSIVO */
+@media(max-width:900px){ .container{flex-direction:column;} }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <h2>Calendário de Sepultamentos</h2>
+  <button onclick="window.location.href='login.html'">Voltar ao Login</button>
+</div>
+
+<div class="container" id="diasCalendario"></div>
+
+<script>
+// ===== DADOS DE EXEMPLO =====
+// Se estiver puxando do Airtable ou outro banco, substitua aqui.
+let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
+
+// ===== CONFIGURAÇÃO =====
+const hoje = new Date();
+const container = document.getElementById("diasCalendario");
+
+function atualizarCalendario(){
+  container.innerHTML = "";
+
+  for(let i=0;i<5;i++){
+    const dia = new Date();
+    dia.setDate(hoje.getDate()+i);
+    const diaStr = dia.toISOString().split("T")[0];
+
+    const cardDia = document.createElement("div");
+    cardDia.classList.add("cardDia");
+
+    const titulo = document.createElement("h4");
+    titulo.textContent = dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
+    cardDia.appendChild(titulo);
+
+    const registros = agendamentos.filter(a=>a.Data===diaStr);
+    if(registros.length===0){
+      const vazio = document.createElement("p"); vazio.textContent="Nenhum sepultamento";
+      cardDia.appendChild(vazio);
+    }
+
+    registros.forEach(a=>{
+      const div = document.createElement("div");
+      div.classList.add("cardAgendamento");
+
+      // Calcular alerta de horário próximo (menos de 1h)
+      const agora = new Date();
+      const [h,m] = a.Hora.split(":").map(Number);
+      const dataHoraAgendamento = new Date(a.Data);
+      dataHoraAgendamento.setHours(h,m,0,0);
+
+      if((dataHoraAgendamento - agora) <= 3600000 && (dataHoraAgendamento - agora) >= 0){
+        div.classList.add("alerta");
+      }
+
+      div.innerHTML = `<span>${a.Hora} - ${a.Falecido}</span>
+                       <span>${a.Setor||"-"}</span>`;
+
+      cardDia.appendChild(div);
+    });
+
+    container.appendChild(cardDia);
+  }
+}
+
+// Atualiza a cada minuto para refletir alertas
+setInterval(atualizarCalendario,60000);
+atualizarCalendario();
+</script>
+
+</body>
+</html>
