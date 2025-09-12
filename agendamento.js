@@ -3,10 +3,9 @@ const BASE_ID = "app2lNLG6HAy5tHmx";
 const TABLE_NAME = "Sepultamentos";
 
 const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
-const senhaLogada = localStorage.getItem("senhaLogada") || "";
 const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-if (isAdmin) document.getElementById("adminControles").style.display = "block";
+if(isAdmin) document.getElementById("adminControles").style.display="block";
 
 const horariosPadrao = [
   "09:00","09:20","09:40","10:00","10:20","10:40","11:00",
@@ -24,9 +23,9 @@ maxData.setDate(hoje.getDate() + 5);
 dataInput.min = hoje.toISOString().split("T")[0];
 dataInput.max = maxData.toISOString().split("T")[0];
 
-// Evento de mudança de data
+// Evento mudança de data
 dataInput.addEventListener("change", () => {
-  if (!dataInput.value) {
+  if(!dataInput.value){
     document.getElementById("horarios").innerHTML = "Escolha uma data para ver os horários disponíveis";
   } else {
     gerarHorarios();
@@ -34,13 +33,13 @@ dataInput.addEventListener("change", () => {
   }
 });
 
-// Gerar horários
-async function gerarHorarios() {
+// Função para gerar horários
+async function gerarHorarios(){
   const data = dataInput.value;
   const container = document.getElementById("horarios");
   container.innerHTML = "";
   horarioSelecionado = null;
-  if (!data) return;
+  if(!data) return;
 
   const ocupados = await buscarHorariosOcupados(data);
 
@@ -48,40 +47,30 @@ async function gerarHorarios() {
     const div = document.createElement("div");
     div.classList.add("hora");
     div.textContent = hora;
-    div.style.flex = "1 0 80px";
 
     const registroOcupado = ocupados.find(r => r.Hora === hora);
-
-    if (registroOcupado) {
+    if(registroOcupado){
       div.classList.add("ocupado");
       div.dataset.tooltip = `${registroOcupado.Falecido} (${registroOcupado.Pendencias || "Sem pendência"})`;
-
-      if (isAdmin) {
+      if(isAdmin){
         div.title = "Clique para desbloquear (Admin)";
         div.onclick = async () => {
-          if (confirm(`Desbloquear horário ${hora}?`)) {
+          if(confirm(`Desbloquear horário ${hora}?`)){
             await deletarAgendamento(registroOcupado.id);
             gerarHorarios();
             mostrarSepultamentosDia();
           }
         };
-      } else {
-        div.title = div.dataset.tooltip;
-        div.style.cursor = "not-allowed";
       }
-
     } else {
-      div.style.background = "#28a745"; // verde disponível
-      div.style.color = "white";
-      div.onclick = () => selecionarHorario(div, hora);
+      div.onclick = () => selecionarHorario(div,hora);
     }
-
     container.appendChild(div);
   });
 }
 
-// Seleciona horário
-function selecionarHorario(div, hora) {
+// Selecionar horário
+function selecionarHorario(div,hora){
   document.querySelectorAll(".hora").forEach(h => h.classList.remove("selecionado"));
   div.classList.add("selecionado");
   horarioSelecionado = hora;
@@ -89,46 +78,42 @@ function selecionarHorario(div, hora) {
 }
 
 // Buscar horários ocupados
-async function buscarHorariosOcupados(data) {
+async function buscarHorariosOcupados(data){
   const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={Data}='${data}'`;
-  const resposta = await fetch(url, {
-    headers: { Authorization: `Bearer ${API_KEY}` }
-  });
+  const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
   const dados = await resposta.json();
-  return dados.records.map(r => ({
+  return dados.records.map(r=>({
     id: r.id,
-    Hora: r.fields.Hora,
-    Falecido: r.fields.Falecido,
-    Pendencias: r.fields.Pendencias,
-    Setor: r.fields.Setor
+    Hora:r.fields.Hora,
+    Falecido:r.fields.Falecido,
+    Pendencias:r.fields.Pendencias,
+    Setor:r.fields.Setor
   }));
 }
 
 // Mostrar sepultamentos do dia
-async function mostrarSepultamentosDia() {
+async function mostrarSepultamentosDia(){
   const data = dataInput.value;
   const listaEl = document.getElementById("listaDia");
   listaEl.innerHTML = "";
-  if (!data) return;
+  if(!data) return;
 
   const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={Data}='${data}'`;
-  const resposta = await fetch(url, {
-    headers: { Authorization: `Bearer ${API_KEY}` }
-  });
+  const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
   const dados = await resposta.json();
 
-  dados.records.forEach(r => {
+  dados.records.forEach(r=>{
     const card = document.createElement("div");
     card.classList.add("card");
-    card.innerHTML = `<h4>${r.fields.Hora}</h4>
-                      <p>${r.fields.Falecido}</p>
-                      <p>${r.fields.Setor || "Sem setor"}</p>`;
+    card.innerHTML=`<h4>${r.fields.Hora}</h4>
+                    <p>${r.fields.Falecido}</p>
+                    <p>${r.fields.Setor || "Sem setor"}</p>`;
     listaEl.appendChild(card);
   });
 }
 
 // Confirmar agendamento
-async function confirmarAgendamento() {
+async function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value;
   const pendencias = document.getElementById("pendencias").value;
@@ -136,28 +121,26 @@ async function confirmarAgendamento() {
   const exumacao = document.getElementById("exumacao").value;
   const setor = document.getElementById("setor").value;
 
-  if (!data || !horarioSelecionado || !falecido) { 
+  if(!data || !horarioSelecionado || !falecido){ 
     alert("Preencha todos os campos e selecione um horário!");
     return; 
   }
 
-  const novoAgendamento = { 
-    fields: { 
-      Data: data, 
-      Hora: horarioSelecionado, 
-      Falecido: falecido, 
-      Pendencias: pendencias, 
-      DescPendencia: descPendencia, 
-      Exumacao: exumacao, 
-      Setor: setor, 
-      Atendente: usuarioLogado 
-    } 
-  };
+  const novoAgendamento = { fields: { 
+    Data:data, 
+    Hora:horarioSelecionado, 
+    Falecido:falecido, 
+    Pendencias:pendencias, 
+    DescPendencia:descPendencia, 
+    Exumacao:exumacao, 
+    Setor:setor, 
+    Atendente:usuarioLogado 
+  }};
 
-  await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify(novoAgendamento)
+  await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}`,{
+    method:"POST",
+    headers:{Authorization:`Bearer ${API_KEY}`, "Content-Type":"application/json"},
+    body:JSON.stringify(novoAgendamento)
   });
 
   atualizarResumo();
@@ -166,18 +149,17 @@ async function confirmarAgendamento() {
 }
 
 // Cancelar agendamento pelo admin
-async function deletarAgendamento(id) {
-  await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`, {
-    method: "DELETE", 
-    headers: { Authorization: `Bearer ${API_KEY}` }
+async function deletarAgendamento(id){
+  await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,{
+    method:"DELETE", 
+    headers:{Authorization:`Bearer ${API_KEY}`}
   });
 }
 
 // Atualizar resumo
-function atualizarResumo() {
+function atualizarResumo(){
   const falecido = document.getElementById("falecido").value;
-  resumoEl.style.display = "block";
-  resumoEl.innerHTML = `<h3>Resumo do Agendamento</h3>
+  resumoEl.innerHTML=`<h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value || "-"}</p>
     <p><b>Hora:</b> ${horarioSelecionado || "-"}</p>
     <p><b>Falecido:</b> ${falecido || "-"}</p>
