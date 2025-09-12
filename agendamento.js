@@ -49,6 +49,7 @@ function gerarHorarios(){
   if(!data) return;
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
+  const agora = new Date();
 
   function criarHorarioDiv(hora){
     const div = document.createElement("div");
@@ -70,14 +71,14 @@ function gerarHorarios(){
       }
     } else {
       // bloqueia horários retroativos do mesmo dia
-      const agora = new Date();
       const [h,m] = hora.split(":").map(Number);
-      const horarioData = new Date(data);
-      horarioData.setHours(h,m,0,0);
-      if(horarioData < agora){
+      const dataHora = new Date(data);
+      dataHora.setHours(h,m,0,0);
+      if(dataHora < agora){
         div.classList.add("ocupado");
-        div.dataset.tooltip = "Horário passado";
-        div.style.cursor = "not-allowed";
+        div.style.background="#6c757d"; // cinza
+        div.style.color="#fff";
+        div.style.cursor="not-allowed";
       } else {
         div.onclick = () => selecionarHorario(div,hora);
       }
@@ -85,14 +86,22 @@ function gerarHorarios(){
     return div;
   }
 
-  // Separa manhã e tarde
-  const manha = document.createElement("div"); manha.style.marginBottom="10px";
-  horariosManha.forEach(h=>manha.appendChild(criarHorarioDiv(h)));
-  container.appendChild(manha);
+  // Div Manhã
+  const manhaDiv = document.createElement("div");
+  manhaDiv.style.marginBottom="10px";
+  const tituloManha = document.createElement("h4");
+  tituloManha.textContent = "Manhã";
+  manhaDiv.appendChild(tituloManha);
+  horariosManha.forEach(h => manhaDiv.appendChild(criarHorarioDiv(h)));
+  container.appendChild(manhaDiv);
 
-  const tarde = document.createElement("div");
-  horariosTarde.forEach(h=>tarde.appendChild(criarHorarioDiv(h)));
-  container.appendChild(tarde);
+  // Div Tarde
+  const tardeDiv = document.createElement("div");
+  const tituloTarde = document.createElement("h4");
+  tituloTarde.textContent = "Tarde";
+  tardeDiv.appendChild(tituloTarde);
+  horariosTarde.forEach(h => tardeDiv.appendChild(criarHorarioDiv(h)));
+  container.appendChild(tardeDiv);
 }
 
 // ===== SELECIONAR HORÁRIO =====
@@ -120,23 +129,23 @@ function atualizarResumo(){
 // ===== CONFIRMAR AGENDAMENTO =====
 function confirmarAgendamento(){
   const data = dataInput.value;
-  const falecido = document.getElementById("falecido").value;
-  const contrato = document.getElementById("contrato").value;
-  const gavetas = document.getElementById("gavetas").value;
-  const titular = document.getElementById("titular").value;
+  const falecido = document.getElementById("falecido").value.trim();
+  const contrato = document.getElementById("contrato").value.trim();
+  const gavetas = document.getElementById("gavetas").value.trim();
+  const titular = document.getElementById("titular").value.trim();
   const pendencias = document.getElementById("pendencias").value;
-  const descPendencia = document.getElementById("descPendencia").value;
+  const descPendencia = document.getElementById("descPendencia").value.trim();
   const exumacao = document.getElementById("exumacao").value;
-  const setor = document.getElementById("setor").value;
+  const setor = document.getElementById("setor").value.trim();
 
   if(!data || !horarioSelecionado || !falecido){
     alert("Preencha todos os campos e selecione um horário!");
     return;
   }
 
-  // evita duplicidade de falecido
-  if(agendamentos.some(a=>a.Falecido.toLowerCase()===falecido.toLowerCase())){
-    alert("Este falecido já possui agendamento!");
+  // valida falecido duplicado no mesmo dia
+  if(agendamentos.some(a=>a.Data===data && a.Falecido.toLowerCase()===falecido.toLowerCase())){
+    alert("Falecido já agendado para esta data!");
     return;
   }
 
@@ -227,7 +236,7 @@ function abrirModal(a){
 
 function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
 
-// ===== COPIAR RESUMO =====
+// ===== FUNÇÃO COPIAR RESUMO =====
 function copiarResumo(){
   const texto = document.getElementById("modalInfo").innerText;
   navigator.clipboard.writeText(texto)
