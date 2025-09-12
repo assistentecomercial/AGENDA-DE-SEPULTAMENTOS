@@ -19,7 +19,6 @@ body {
   max-width:1200px;
   width:100%;
 }
-/* Agendamento / Lista */
 .agenda, .lista {
   background:white;
   border-radius:12px;
@@ -27,14 +26,11 @@ body {
   box-shadow:0 4px 12px rgba(0,0,0,0.15);
   flex:1 1 400px;
 }
-/* Títulos */
 h2 { color:#28a745; text-align:center; margin-bottom:15px; }
-/* Inputs e Botões */
 label { font-weight:bold; display:block; margin-top:10px; }
 input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
 button { background:#28a745; color:white; border:none; cursor:pointer; transition:0.2s; }
 button:hover { background:#218838; transform:scale(1.02); }
-/* Horários */
 #horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
 .hora {
   padding:12px;
@@ -49,7 +45,6 @@ button:hover { background:#218838; transform:scale(1.02); }
 .hora:hover { transform:translateY(-2px) scale(1.05); background:#d4edda; }
 .hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 .hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
-/* Tooltip */
 .hora[data-tooltip]:hover::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -65,28 +60,49 @@ button:hover { background:#218838; transform:scale(1.02); }
   opacity: 0.9;
   pointer-events: none;
 }
-/* Resumo */
 #resumo { display:block; margin-top:20px; padding:15px; border-radius:12px; background:#f8f9fa; border:1px solid #ccc; }
-/* Admin Controles */
 .admin-controles { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f1f1f1; border:1px solid #666; }
-/* Lista lateral */
 .lista-sepultamentos { margin-top:10px; max-height:500px; overflow-y:auto; }
-.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; }
+.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; cursor:pointer; }
 .lista-sepultamentos .card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.15); }
 .lista-sepultamentos .card h4 { margin:0 0 5px 0; color:#28a745; }
-/* Responsividade */
+.modal {
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.5);
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+.modal-content {
+  background:white;
+  padding:20px;
+  border-radius:12px;
+  width:350px;
+  max-width:90%;
+  position:relative;
+}
+.modal-content h3 { margin-top:0; color:#28a745; }
+.close-modal {
+  position:absolute;
+  top:10px; right:10px;
+  cursor:pointer;
+  font-weight:bold;
+  font-size:18px;
+}
 @media(max-width:900px){ .container{flex-direction:column;} }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- Coluna de agendamento -->
   <div class="agenda">
     <h2>Agendamento de Sepultamentos</h2>
 
     <label for="data">Data:</label>
     <input type="date" id="data">
+
     <div id="horarios">Escolha uma data para ver os horários disponíveis</div>
 
     <label>Nome do Falecido:</label>
@@ -117,10 +133,17 @@ button:hover { background:#218838; transform:scale(1.02); }
     <div id="adminControles" class="admin-controles"></div>
   </div>
 
-  <!-- Coluna de lista de sepultamentos do dia -->
   <div class="lista">
     <h2>Sepultamentos do Dia</h2>
     <div id="listaDia" class="lista-sepultamentos"></div>
+  </div>
+</div>
+
+<!-- Modal resumo -->
+<div class="modal" id="modalResumo">
+  <div class="modal-content" id="modalContent">
+    <span class="close-modal" onclick="fecharModal()">&times;</span>
+    <div id="modalInfo"></div>
   </div>
 </div>
 
@@ -130,30 +153,39 @@ const horariosPadrao = [
   "14:20","14:40","15:00","15:20","15:40","16:00","16:20","16:40"
 ];
 
-let agendamentos = []; // Armazena todos os agendamentos em memória
+const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
+const isAdmin = localStorage.getItem("isAdmin") === "true";
+if(isAdmin) document.getElementById("adminControles").style.display="block";
+
 let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 
-const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
-const isAdmin = localStorage.getItem("isAdmin") === "true";
-
-if(isAdmin) document.getElementById("adminControles").style.display="block";
-
-// Limita datas (hoje até 5 dias à frente)
 const hoje = new Date();
 const maxData = new Date();
 maxData.setDate(hoje.getDate() + 5);
 dataInput.min = hoje.toISOString().split("T")[0];
 dataInput.max = maxData.toISOString().split("T")[0];
 
+let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
+
+function limparAgendamentosExpirados(){
+  const agora = new Date();
+  agendamentos = agendamentos.filter(a=>{
+    const [h,m] = a.Hora.split(":").map(Number);
+    const agendamentoDate = new Date(a.Data);
+    agendamentoDate.setHours(h,m,0,0);
+    agendamentoDate.setDate(agendamentoDate.getDate() +1); 
+    return agendamentoDate > agora;
+  });
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+}
+
+limparAgendamentosExpirados();
+
 dataInput.addEventListener("change", () => {
-  if(!dataInput.value){
-    document.getElementById("horarios").innerHTML = "Escolha uma data para ver os horários disponíveis";
-  } else {
-    gerarHorarios();
-    mostrarSepultamentosDia();
-  }
+  gerarHorarios();
+  mostrarSepultamentosDia();
 });
 
 function gerarHorarios(){
@@ -165,35 +197,35 @@ function gerarHorarios(){
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
 
-  horariosPadrao.forEach(hora => {
+  horariosPadrao.forEach(hora=>{
     const div = document.createElement("div");
     div.classList.add("hora");
     div.textContent = hora;
 
-    const registroOcupado = ocupados.find(r => r.Hora===hora);
+    const registroOcupado = ocupados.find(r=>r.Hora===hora);
     if(registroOcupado){
       div.classList.add("ocupado");
       div.dataset.tooltip = `${registroOcupado.Falecido} (${registroOcupado.Pendencias})`;
       if(isAdmin){
-        div.title = "Clique para desbloquear (Admin)";
-        div.onclick = () => {
+        div.title="Clique para desbloquear (Admin)";
+        div.onclick = ()=>{
           if(confirm(`Desbloquear horário ${hora}?`)){
             agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
+            localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
             gerarHorarios();
             mostrarSepultamentosDia();
           }
         };
       }
     } else {
-      div.onclick = () => selecionarHorario(div,hora);
+      div.onclick = ()=>selecionarHorario(div,hora);
     }
-
     container.appendChild(div);
   });
 }
 
 function selecionarHorario(div,hora){
-  document.querySelectorAll(".hora").forEach(h => h.classList.remove("selecionado"));
+  document.querySelectorAll(".hora").forEach(h=>h.classList.remove("selecionado"));
   div.classList.add("selecionado");
   horarioSelecionado = hora;
   atualizarResumo();
@@ -210,8 +242,8 @@ function mostrarSepultamentosDia(){
     const card = document.createElement("div");
     card.classList.add("card");
     card.innerHTML=`<h4>${r.Hora}</h4>
-                    <p>${r.Falecido}</p>
-                    <p>${r.Setor || "Sem setor"}</p>`;
+                    <p><b>Falecido:</b> ${r.Falecido}</p>`;
+    card.onclick = ()=>abrirModal(r);
     listaEl.appendChild(card);
   });
 }
@@ -240,6 +272,7 @@ function confirmarAgendamento(){
     Atendente:usuarioLogado
   });
 
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
   gerarHorarios();
   mostrarSepultamentosDia();
   atualizarResumo();
@@ -253,7 +286,23 @@ function atualizarResumo(){
     <p><b>Falecido:</b> ${falecido || "-"}</p>
     <p><b>Atendente:</b> ${usuarioLogado || "-"}</p>`;
 }
-</script>
 
+// Modal
+function abrirModal(agendamento){
+  const modal = document.getElementById("modalResumo");
+  const info = document.getElementById("modalInfo");
+  info.innerHTML = `<h3>${agendamento.Falecido}</h3>
+                    <p><b>Data:</b> ${agendamento.Data}</p>
+                    <p><b>Hora:</b> ${agendamento.Hora}</p>
+                    <p><b>Pendências:</b> ${agendamento.Pendencias}</p>
+                    <p><b>Descrição:</b> ${agendamento.DescPendencia || "-"}</p>
+                    <p><b>Exumação:</b> ${agendamento.Exumacao}</p>
+                    <p><b>Setor:</b> ${agendamento.Setor || "-"}</p>
+                    <p><b>Atendente:</b> ${agendamento.Atendente}</p>`;
+  modal.style.display="flex";
+}
+function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
+
+</script>
 </body>
 </html>
