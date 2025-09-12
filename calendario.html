@@ -71,51 +71,50 @@ body {
 <div class="container" id="diasCalendario"></div>
 
 <script>
-// ===== DADOS DE EXEMPLO =====
-// Se estiver puxando do Airtable ou outro banco, substitua aqui.
-let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
-
-// ===== CONFIGURAÇÃO =====
-const hoje = new Date();
-const container = document.getElementById("diasCalendario");
-
-function atualizarCalendario(){
+// ===== FUNÇÃO PARA ATUALIZAR CALENDÁRIO =====
+function atualizarCalendario() {
+  const container = document.getElementById("diasCalendario");
   container.innerHTML = "";
 
-  for(let i=0;i<5;i++){
+  // Puxa agendamentos do localStorage (mesmos do agendamento.js)
+  const agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
+
+  const hoje = new Date();
+
+  for (let i = 0; i < 5; i++) {
     const dia = new Date();
-    dia.setDate(hoje.getDate()+i);
+    dia.setDate(hoje.getDate() + i);
     const diaStr = dia.toISOString().split("T")[0];
 
     const cardDia = document.createElement("div");
     cardDia.classList.add("cardDia");
 
     const titulo = document.createElement("h4");
-    titulo.textContent = dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
+    titulo.textContent = dia.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
     cardDia.appendChild(titulo);
 
-    const registros = agendamentos.filter(a=>a.Data===diaStr);
-    if(registros.length===0){
-      const vazio = document.createElement("p"); vazio.textContent="Nenhum sepultamento";
+    const registros = agendamentos.filter(a => a.Data === diaStr);
+
+    if (registros.length === 0) {
+      const vazio = document.createElement("p");
+      vazio.textContent = "Nenhum sepultamento";
       cardDia.appendChild(vazio);
     }
 
-    registros.forEach(a=>{
+    registros.forEach(a => {
       const div = document.createElement("div");
       div.classList.add("cardAgendamento");
 
-      // Calcular alerta de horário próximo (menos de 1h)
+      // Alerta se estiver dentro de 1h
+      const [h, m] = a.Hora.split(":").map(Number);
+      const dataHora = new Date(a.Data);
+      dataHora.setHours(h, m, 0, 0);
       const agora = new Date();
-      const [h,m] = a.Hora.split(":").map(Number);
-      const dataHoraAgendamento = new Date(a.Data);
-      dataHoraAgendamento.setHours(h,m,0,0);
-
-      if((dataHoraAgendamento - agora) <= 3600000 && (dataHoraAgendamento - agora) >= 0){
+      if ((dataHora - agora) <= 3600000 && (dataHora - agora) >= 0) {
         div.classList.add("alerta");
       }
 
-      div.innerHTML = `<span>${a.Hora} - ${a.Falecido}</span>
-                       <span>${a.Setor||"-"}</span>`;
+      div.innerHTML = `<span>${a.Hora} - ${a.Falecido}</span><span>${a.Setor || "-"}</span>`;
 
       cardDia.appendChild(div);
     });
@@ -124,8 +123,8 @@ function atualizarCalendario(){
   }
 }
 
-// Atualiza a cada minuto para refletir alertas
-setInterval(atualizarCalendario,60000);
+// Atualiza a cada minuto para alertas em tempo real
+setInterval(atualizarCalendario, 60000);
 atualizarCalendario();
 </script>
 
