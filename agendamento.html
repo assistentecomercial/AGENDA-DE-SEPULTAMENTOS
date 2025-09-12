@@ -4,77 +4,73 @@
 <meta charset="UTF-8">
 <title>Agendamento - Sistema de Sepultamentos</title>
 <style>
-body {
-  font-family: 'Garamond', serif;
-  background: #f0f2f5;
-  margin: 0;
-  padding: 20px;
-}
-.container {
-  max-width: 900px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-h2 {
-  color: #28a745;
-  text-align: center;
-}
-label { font-weight: bold; margin-top: 10px; display: block; }
-input, select, button { width: 100%; padding: 10px; margin: 6px 0; border-radius: 8px; border: 1px solid #ccc; }
-button { background: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; }
-button:hover { background: #218838; }
-#horarios { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-.hora { padding: 12px; border-radius: 8px; cursor: pointer; flex: 1 0 80px; text-align: center; transition: 0.2s; background: #e9ecef; }
+body { font-family: 'Garamond', serif; background: #f0f2f5; margin:0; padding:20px; }
+.container { display:flex; max-width: 1200px; margin:auto; gap:20px; }
+.agenda, .lista { background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex:1; }
+h2 { color:#28a745; text-align:center; }
+label { font-weight:bold; display:block; margin-top:10px; }
+input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; }
+button { background:#28a745; color:white; border:none; cursor:pointer; font-size:16px; }
+button:hover { background:#218838; }
+#horarios { display:flex; flex-wrap: wrap; gap:10px; margin-top:10px; }
+.hora { padding:12px; border-radius:8px; cursor:pointer; flex:1 0 80px; text-align:center; transition:0.2s; background:#e9ecef; }
 .hora:hover { transform: scale(1.05); }
-.hora.ocupado { background: #dc3545; color: white; cursor: not-allowed; }
-.hora.selecionado { background: #28a745; color: white; font-weight: bold; }
-#resumo { display: none; margin-top: 20px; padding: 15px; border-radius: 8px; background: #f8f9fa; border: 1px solid #ccc; }
-.admin-controles { display: none; margin-top: 20px; padding: 15px; border-radius: 8px; background: #f1f1f1; border: 1px solid #666; }
+.hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
+.hora.selecionado { background:#28a745; color:white; font-weight:bold; }
+#resumo { display:none; margin-top:20px; padding:15px; border-radius:8px; background:#f8f9fa; border:1px solid #ccc; }
+.admin-controles { display:none; margin-top:20px; padding:15px; border-radius:8px; background:#f1f1f1; border:1px solid #666; }
+.lista-sepultamentos { margin-top:10px; }
+.lista-sepultamentos p { margin:4px 0; }
 </style>
 </head>
 <body>
+
 <div class="container">
-  <h2>Agendamento de Sepultamentos</h2>
+  <!-- Coluna de agendamento -->
+  <div class="agenda">
+    <h2>Agendamento de Sepultamentos</h2>
+    <label>Data:</label>
+    <input type="date" id="data" min="" max="">
+    <div id="horarios"></div>
 
-  <label>Data:</label>
-  <input type="date" id="data" min="" max="">
+    <label>Nome do Falecido:</label>
+    <input type="text" id="falecido">
 
-  <div id="horarios"></div>
+    <label>Pendências:</label>
+    <select id="pendencias">
+      <option value="NENHUMA">Nenhuma</option>
+      <option value="DOCUMENTAÇÃO">Documentação</option>
+      <option value="PAGAMENTO">Pagamento</option>
+    </select>
 
-  <label>Nome do Falecido:</label>
-  <input type="text" id="falecido">
+    <label>Descrição da Pendência:</label>
+    <input type="text" id="descPendencia">
 
-  <label>Pendências:</label>
-  <select id="pendencias">
-    <option value="NENHUMA">Nenhuma</option>
-    <option value="DOCUMENTAÇÃO">Documentação</option>
-    <option value="PAGAMENTO">Pagamento</option>
-  </select>
+    <label>Exumação:</label>
+    <select id="exumacao">
+      <option value="NÃO">Não</option>
+      <option value="SIM">Sim</option>
+    </select>
 
-  <label>Descrição da Pendência:</label>
-  <input type="text" id="descPendencia">
+    <label>Setor:</label>
+    <input type="text" id="setor">
 
-  <label>Exumação:</label>
-  <select id="exumacao">
-    <option value="NÃO">Não</option>
-    <option value="SIM">Sim</option>
-  </select>
+    <button onclick="confirmarAgendamento()">Confirmar</button>
 
-  <label>Setor:</label>
-  <input type="text" id="setor">
+    <div id="resumo"></div>
 
-  <button onclick="confirmarAgendamento()">Confirmar</button>
+    <div id="adminControles" class="admin-controles">
+      <h3>Controle do Administrador</h3>
+      <label>ID do Agendamento para Editar/Excluir:</label>
+      <input type="text" id="agendamentoId">
+      <button onclick="cancelarAgendamento()">Cancelar Agendamento</button>
+    </div>
+  </div>
 
-  <div id="resumo"></div>
-
-  <div id="adminControles" class="admin-controles">
-    <h3>Controle do Administrador</h3>
-    <label>ID do Agendamento para Editar/Excluir:</label>
-    <input type="text" id="agendamentoId">
-    <button onclick="cancelarAgendamento()">Cancelar Agendamento</button>
+  <!-- Coluna de lista de sepultamentos do dia -->
+  <div class="lista">
+    <h2>Sepultamentos do Dia</h2>
+    <div id="listaDia" class="lista-sepultamentos"></div>
   </div>
 </div>
 
@@ -85,28 +81,29 @@ const TABLE_NAME = "Sepultamentos";
 
 const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
 const senhaLogada = localStorage.getItem("senhaLogada") || "";
-const isAdmin = (["LUANA","RAFAEL"].includes(usuarioLogado.toUpperCase()) && senhaLogada === "COMERCIAL@");
-if(isAdmin) document.getElementById("adminControles").style.display = "block";
+const isAdmin = (["LUANA","RAFAEL"].includes(usuarioLogado.toUpperCase()) && senhaLogada==="COMERCIAL@");
+if(isAdmin) document.getElementById("adminControles").style.display="block";
 
-const horariosPadrao = ["09:00","09:20","09:40","10:00","10:20","10:40","11:00","14:20","14:40","15:00","15:20","15:40","16:00","16:20","16:40"];
+const horariosPadrao = [
+  "09:00","09:20","09:40","10:00","10:20","10:40","11:00",
+  "14:20","14:40","15:00","15:20","15:40","16:00","16:20","16:40"
+];
+
 let horarioSelecionado = null;
-
-// Limita seleção de datas a até 5 dias
 const dataInput = document.getElementById("data");
 const hoje = new Date();
-const maxData = new Date();
-maxData.setDate(hoje.getDate()+5);
-const formatar = d => d.toISOString().split("T")[0];
+const maxData = new Date(); maxData.setDate(hoje.getDate()+5);
+const formatar = d=>d.toISOString().split("T")[0];
 dataInput.min = formatar(hoje);
 dataInput.max = formatar(maxData);
 
-dataInput.addEventListener("change", gerarHorarios);
+dataInput.addEventListener("change", ()=>{ gerarHorarios(); mostrarSepultamentosDia(); });
 
-async function gerarHorarios() {
+async function gerarHorarios(){
   const data = dataInput.value;
   const container = document.getElementById("horarios");
   container.innerHTML = "";
-  horarioSelecionado = null;
+  horarioSelecionado=null;
   if(!data) return;
 
   const ocupados = await buscarHorariosOcupados(data);
@@ -114,8 +111,7 @@ async function gerarHorarios() {
   horariosPadrao.forEach(hora=>{
     const div = document.createElement("div");
     div.textContent = hora;
-
-    const recordOcupado = ocupados.find(r => r.Hora===hora);
+    const recordOcupado = ocupados.find(r=>r.Hora===hora);
     if(recordOcupado){
       div.classList.add("ocupado");
       div.textContent = `${hora} (Agendado: ${recordOcupado.Falecido})`;
@@ -123,7 +119,6 @@ async function gerarHorarios() {
       div.classList.add("hora");
       div.onclick = ()=>selecionarHorario(div,hora);
     }
-
     container.appendChild(div);
   });
 }
@@ -131,7 +126,7 @@ async function gerarHorarios() {
 function selecionarHorario(div,hora){
   document.querySelectorAll(".hora").forEach(h=>h.classList.remove("selecionado"));
   div.classList.add("selecionado");
-  horarioSelecionado = hora;
+  horarioSelecionado=hora;
 }
 
 async function buscarHorariosOcupados(data){
@@ -139,6 +134,21 @@ async function buscarHorariosOcupados(data){
   const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
   const dados = await resposta.json();
   return dados.records.map(r=>({Hora:r.fields.Hora,Falecido:r.fields.Falecido}));
+}
+
+async function mostrarSepultamentosDia(){
+  const data = dataInput.value;
+  const listaEl = document.getElementById("listaDia");
+  listaEl.innerHTML = "";
+  if(!data) return;
+
+  const url=`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={Data}='${data}'`;
+  const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
+  const dados = await resposta.json();
+
+  dados.records.forEach(r=>{
+    listaEl.innerHTML += `<p><b>${r.fields.Hora}</b> - ${r.fields.Falecido} (${r.fields.Setor || "Sem setor"})</p>`;
+  });
 }
 
 async function confirmarAgendamento(){
@@ -161,13 +171,14 @@ async function confirmarAgendamento(){
 
   const resumoEl = document.getElementById("resumo");
   resumoEl.style.display="block";
-  resumoEl.innerHTML = `<h3>Resumo do Agendamento</h3>
+  resumoEl.innerHTML=`<h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${data}</p>
     <p><b>Hora:</b> ${horarioSelecionado}</p>
     <p><b>Falecido:</b> ${falecido}</p>
     <p><b>Atendente:</b> ${usuarioLogado}</p>`;
 
   gerarHorarios();
+  mostrarSepultamentosDia();
 }
 
 async function cancelarAgendamento(){
@@ -177,8 +188,9 @@ async function cancelarAgendamento(){
   await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,{method:"DELETE", headers:{Authorization:`Bearer ${API_KEY}`}});
   alert("Agendamento cancelado!");
   gerarHorarios();
+  mostrarSepultamentosDia();
 }
 </script>
+
 </body>
 </html>
-
