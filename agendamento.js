@@ -12,6 +12,7 @@ let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
+const gavetasInput = document.getElementById("gavetas");
 
 // ===== CONFIGURAÇÕES DE DATA =====
 const hoje = new Date();
@@ -34,6 +35,12 @@ function limparAgendamentosExpirados(){
 }
 limparAgendamentosExpirados();
 
+// ===== INPUT GAVETAS =====
+gavetasInput.setAttribute("max", 3);
+gavetasInput.addEventListener("input", ()=>{
+  if(Number(gavetasInput.value) > 3) gavetasInput.value = 3;
+});
+
 // ===== EVENTOS =====
 dataInput.addEventListener("change", ()=>{
   gerarHorarios();
@@ -50,6 +57,7 @@ function gerarHorarios(){
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
   const agora = new Date();
+  const hojeStr = hoje.toISOString().split("T")[0];
 
   function criarHorarioDiv(hora, periodo){
     const div = document.createElement("div");
@@ -70,17 +78,27 @@ function gerarHorarios(){
         };
       }
     } else {
-      // Bloquear horários retroativos no mesmo dia
       const [h,m] = hora.split(":").map(Number);
       const dtHorario = new Date(data);
       dtHorario.setHours(h,m,0,0);
-      if(dtHorario < agora){
+
+      // Bloquear apenas horários retroativos do dia atual
+      if(data === hojeStr && dtHorario < agora){
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
       } else {
         div.onclick = () => selecionarHorario(div,hora);
       }
     }
+
+    // Aviso visual: se o horário for dentro de 30 minutos do atual, sinal de alerta
+    if(data === hojeStr){
+      const diffMin = (new Date(data + "T" + hora) - agora)/60000;
+      if(diffMin >= 0 && diffMin <= 30){
+        div.style.border = "2px solid red";
+      }
+    }
+
     return div;
   }
 
@@ -121,7 +139,7 @@ function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value.trim();
   const contrato = document.getElementById("contrato").value;
-  const gavetas = document.getElementById("gavetas").value;
+  const gavetas = Number(document.getElementById("gavetas").value);
   const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
@@ -133,7 +151,11 @@ function confirmarAgendamento(){
     return;
   }
 
-  // Evitar duplicidade de falecido
+  if(gavetas > 3){
+    alert("Máximo de 3 gavetas permitido!");
+    return;
+  }
+
   if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
     alert("Este falecido já está agendado!");
     return;
