@@ -5,22 +5,24 @@
 <title>Agendamento - Sistema de Sepultamentos</title>
 <style>
 body { font-family: 'Garamond', serif; background: #f0f2f5; margin:0; padding:20px; }
-.container { display:flex; max-width: 1200px; margin:auto; gap:20px; }
-.agenda, .lista { background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex:1; }
-h2 { color:#28a745; text-align:center; }
+.container { display:flex; flex-wrap:wrap; max-width:1200px; margin:auto; gap:20px; }
+.agenda, .lista { background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex:1 1 400px; }
+h2 { color:#28a745; text-align:center; margin-bottom:15px; }
 label { font-weight:bold; display:block; margin-top:10px; }
 input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; }
-button { background:#28a745; color:white; border:none; cursor:pointer; font-size:16px; }
+button { background:#28a745; color:white; border:none; cursor:pointer; font-size:16px; transition:0.2s; }
 button:hover { background:#218838; }
-#horarios { display:flex; flex-wrap: wrap; gap:10px; margin-top:10px; }
-.hora { padding:12px; border-radius:8px; cursor:pointer; flex:1 0 80px; text-align:center; transition:0.2s; background:#e9ecef; }
-.hora:hover { transform: scale(1.05); }
-.hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
-.hora.selecionado { background:#28a745; color:white; font-weight:bold; }
-#resumo { display:none; margin-top:20px; padding:15px; border-radius:8px; background:#f8f9fa; border:1px solid #ccc; }
-.admin-controles { display:none; margin-top:20px; padding:15px; border-radius:8px; background:#f1f1f1; border:1px solid #666; }
-.lista-sepultamentos { margin-top:10px; }
-.lista-sepultamentos p { margin:4px 0; }
+#horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.hora { padding:12px; border-radius:12px; cursor:pointer; flex:1 0 80px; text-align:center; background:#e9ecef; transition:0.2s; box-shadow:0 2px 6px rgba(0,0,0,0.1); }
+.hora:hover { transform:translateY(-2px); background:#d4edda; }
+.hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+#resumo { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f8f9fa; border:1px solid #ccc; }
+.admin-controles { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f1f1f1; border:1px solid #666; }
+.lista-sepultamentos { margin-top:10px; max-height:500px; overflow-y:auto; }
+.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; }
+.lista-sepultamentos .card h4 { margin:0 0 5px 0; color:#28a745; }
+@media(max-width:900px){ .container{flex-direction:column;} }
 </style>
 </head>
 <body>
@@ -29,9 +31,9 @@ button:hover { background:#218838; }
   <!-- Coluna de agendamento -->
   <div class="agenda">
     <h2>Agendamento de Sepultamentos</h2>
-    <label>Data:</label>
-    <input type="date" id="data" min="" max="">
-    <div id="horarios"></div>
+    <label for="data">Data:</label>
+    <input type="date" id="data">
+    <div id="horarios">Escolha uma data para ver os horários disponíveis</div>
 
     <label>Nome do Falecido:</label>
     <input type="text" id="falecido">
@@ -91,42 +93,54 @@ const horariosPadrao = [
 
 let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
-const hoje = new Date();
-const maxData = new Date(); maxData.setDate(hoje.getDate()+5);
-const formatar = d=>d.toISOString().split("T")[0];
-dataInput.min = formatar(hoje);
-dataInput.max = formatar(maxData);
 
-dataInput.addEventListener("change", ()=>{ gerarHorarios(); mostrarSepultamentosDia(); });
+// Limita datas (hoje até 5 dias à frente)
+const hoje = new Date();
+const maxData = new Date();
+maxData.setDate(hoje.getDate() + 5);
+dataInput.min = hoje.toISOString().split("T")[0];
+dataInput.max = maxData.toISOString().split("T")[0];
+
+// Evento de mudança de data
+dataInput.addEventListener("change", () => {
+  if(!dataInput.value){
+    document.getElementById("horarios").innerHTML = "Escolha uma data para ver os horários disponíveis";
+  } else {
+    gerarHorarios();
+    mostrarSepultamentosDia();
+  }
+});
 
 async function gerarHorarios(){
   const data = dataInput.value;
   const container = document.getElementById("horarios");
   container.innerHTML = "";
-  horarioSelecionado=null;
+  horarioSelecionado = null;
   if(!data) return;
 
   const ocupados = await buscarHorariosOcupados(data);
 
-  horariosPadrao.forEach(hora=>{
+  horariosPadrao.forEach(hora => {
     const div = document.createElement("div");
+    div.classList.add("hora");
     div.textContent = hora;
-    const recordOcupado = ocupados.find(r=>r.Hora===hora);
+    div.style.flex="1 0 80px";
+
+    const recordOcupado = ocupados.find(r => r.Hora === hora);
     if(recordOcupado){
       div.classList.add("ocupado");
-      div.textContent = `${hora} (Agendado: ${recordOcupado.Falecido})`;
+      div.textContent = `${hora} (${recordOcupado.Falecido})`;
     } else {
-      div.classList.add("hora");
-      div.onclick = ()=>selecionarHorario(div,hora);
+      div.onclick = () => selecionarHorario(div,hora);
     }
     container.appendChild(div);
   });
 }
 
 function selecionarHorario(div,hora){
-  document.querySelectorAll(".hora").forEach(h=>h.classList.remove("selecionado"));
+  document.querySelectorAll(".hora").forEach(h => h.classList.remove("selecionado"));
   div.classList.add("selecionado");
-  horarioSelecionado=hora;
+  horarioSelecionado = hora;
 }
 
 async function buscarHorariosOcupados(data){
@@ -147,7 +161,10 @@ async function mostrarSepultamentosDia(){
   const dados = await resposta.json();
 
   dados.records.forEach(r=>{
-    listaEl.innerHTML += `<p><b>${r.fields.Hora}</b> - ${r.fields.Falecido} (${r.fields.Setor || "Sem setor"})</p>`;
+    const card = document.createElement("div");
+    card.classList.add("card");
+    card.innerHTML=`<h4>${r.fields.Hora}</h4><p>${r.fields.Falecido}</p><p>${r.fields.Setor || "Sem setor"}</p>`;
+    listaEl.appendChild(card);
   });
 }
 
