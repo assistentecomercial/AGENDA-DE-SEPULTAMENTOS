@@ -94,10 +94,15 @@ function selecionarHorario(div,hora){
 
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
-  resumoEl.innerHTML=`<h3>Resumo do Agendamento</h3>
+  const contrato = document.getElementById("contrato").value || "-";
+  const gavetas = document.getElementById("gavetas").value || "-";
+  resumoEl.innerHTML=`
+    <h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
     <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
     <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
+    <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
+    <p><b>Nº do contrato:</b> ${contrato} - "${gavetas} ${gavetas == 1 ? 'gaveta' : 'gavetas'}"</p>
     <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>`;
 }
 
@@ -105,6 +110,9 @@ function atualizarResumo(){
 function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value;
+  const contrato = document.getElementById("contrato").value;
+  const gavetas = document.getElementById("gavetas").value;
+  const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
   const exumacao = document.getElementById("exumacao").value;
@@ -119,6 +127,9 @@ function confirmarAgendamento(){
     Data:data,
     Hora:horarioSelecionado,
     Falecido:falecido,
+    Contrato:contrato,
+    Gavetas: gavetas,
+    Titular:titular,
     Pendencias:pendencias,
     DescPendencia:descPendencia,
     Exumacao:exumacao,
@@ -183,17 +194,29 @@ function mostrarSepultamentosDia(){
 function abrirModal(a){
   const modal = document.getElementById("modalResumo");
   const info = document.getElementById("modalInfo");
-  info.innerHTML=`<h3>${a.Falecido}</h3>
-                  <p><b>Data:</b> ${a.Data}</p>
-                  <p><b>Hora:</b> ${a.Hora}</p>
-                  <p><b>Pendências:</b> ${a.Pendencias}</p>
-                  <p><b>Descrição:</b> ${a.DescPendencia||"-"}</p>
-                  <p><b>Exumação:</b> ${a.Exumacao}</p>
-                  <p><b>Setor:</b> ${a.Setor||"-"}</p>
-                  <p><b>Atendente:</b> ${a.Atendente}</p>`;
-  modal.style.display="flex";
+  
+  info.innerHTML = `
+    <p><b>FALECIDO:</b> ${a.Falecido}</p>
+    <p><b>TITULAR:</b> ${a.Titular||"-"}</p>
+    <p><b>NÚMERO DO CONTRATO:</b> ${a.Contrato||"-"} - "${a.Gavetas||"-"} ${a.Gavetas==1?'gaveta':'gavetas'}"</p>
+    <p><b>SETOR:</b> ${a.Setor||"-"}</p>
+    <p><b>HORÁRIO:</b> ${a.Hora||"-"}</p>
+    <p><b>PENDÊNCIAS:</b> ${a.Pendencias}</p>
+    <p><b>DESCRIÇÃO:</b> ${a.DescPendencia||"-"}</p>
+  `;
+
+  modal.style.display = "flex";
 }
+
 function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
+
+// ===== FUNÇÃO COPIAR RESUMO =====
+function copiarResumo(){
+  const texto = document.getElementById("modalInfo").innerText;
+  navigator.clipboard.writeText(texto)
+    .then(() => alert("Resumo copiado!"))
+    .catch(err => alert("Erro ao copiar: "+err));
+}
 
 // ===== EDITAR =====
 function editarAgendamento(a){
@@ -205,6 +228,9 @@ function editarAgendamento(a){
   },50);
 
   document.getElementById("falecido").value = a.Falecido;
+  document.getElementById("contrato").value = a.Contrato;
+  document.getElementById("gavetas").value = a.Gavetas;
+  document.getElementById("titular").value = a.Titular;
   document.getElementById("pendencias").value = a.Pendencias;
   document.getElementById("descPendencia").value = a.DescPendencia;
   document.getElementById("exumacao").value = a.Exumacao;
@@ -213,6 +239,18 @@ function editarAgendamento(a){
   agendamentos = agendamentos.filter(x=>x!==a);
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
 }
+
+// ===== LIMITAR GAVETAS DE 1 A 3 =====
+document.getElementById("gavetas").addEventListener("input", e=>{
+  let val = parseInt(e.target.value);
+  if(val>3) e.target.value=3;
+  if(val<1) e.target.value=1;
+  atualizarResumo();
+});
+
+document.getElementById("contrato").addEventListener("input", atualizarResumo);
+document.getElementById("falecido").addEventListener("input", atualizarResumo);
+document.getElementById("titular").addEventListener("input", atualizarResumo);
 
 // ===== INICIALIZAÇÃO =====
 mostrarSepultamentosDia();
