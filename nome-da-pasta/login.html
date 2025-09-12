@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Sistema de Sepultamentos</title>
+  <style>
+    body {
+      font-family: Garamond, serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f2f5;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 350px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #28a745;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-box button:hover {
+      background: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="usuario" placeholder="Usuário" required>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
+
+  <script>
+    const usuariosPermitidos = [
+      "CARLOS", "DÁRVILLA", "DIEGO", "EDER", "ELTON", "GENTILBERTH", "ILDEYLSON",
+      "JOSE", "KARINE", "LAURA", "LUCIENE", "LUIS", "MANOELLY", "MARCIO", "MILLENA",
+      "PAULO", "RAFAEL", "RAFAELLE", "RICHARDS", "TALITA", "THALYSON", "VIVIAN",
+      "VIVIANE"
+    ];
+
+    function fazerLogin() {
+      const usuario = document.getElementById("usuario").value.trim().toUpperCase();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!usuario || !senha) {
+        alert("Preencha usuário e senha!");
+        return;
+      }
+
+      if (!usuariosPermitidos.includes(usuario.split(" ")[0])) {
+        alert("Usuário não autorizado!");
+        return;
+      }
+
+      localStorage.setItem("usuarioLogado", usuario);
+      window.location.href = "agendamento.html";
+    }
+  </script>
+</body>
+</html>
