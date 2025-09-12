@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Agendamento de Sepultamentos</title>
+  <style>
+    body {
+      font-family: Garamond, serif;
+      background: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      height: 100vh;
+    }
+    .container {
+      display: flex;
+      margin-top: 30px;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      width: 900px;
+    }
+    .sidebar {
+      width: 250px;
+      background: #eaf7ec;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+    }
+    .sidebar h3 {
+      margin: 0 0 15px;
+      color: #28a745;
+    }
+    .main {
+      flex: 1;
+      padding: 20px;
+    }
+    .calendar {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .calendar input {
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    .date-title {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #28a745;
+    }
+    .horarios {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+    .horario {
+      width: 200px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #28a745;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #28a745;
+    }
+    .horario:hover {
+      background: #28a745;
+      color: white;
+    }
+    .horario.desabilitado {
+      color: #aaa;
+      border-color: #ccc;
+      cursor: not-allowed;
+      background: #f5f5f5;
+    }
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      width: 400px;
+      position: relative;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #28a745;
+    }
+    .modal-content label {
+      display: block;
+      margin-top: 10px;
+    }
+    .modal-content input, .modal-content select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    .modal-content button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .modal-content button:hover {
+      background: #218838;
+    }
+    .close {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+      font-size: 20px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <h3>Atendente</h3>
+      <p id="atendente"></p>
+    </div>
+    <div class="main">
+      <div class="calendar">
+        <input type="date" id="dataSelecionada">
+      </div>
+      <div class="date-title" id="dataTitulo"></div>
+      <div class="horarios" id="listaHorarios"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modalCadastro">
+    <div class="modal-content">
+      <span class="close" onclick="fecharModal()">&times;</span>
+      <h3>Novo Sepultamento</h3>
+      <label>Falecido</label>
+      <input type="text" id="falecido">
+      <label>Possui Pendências?</label>
+      <select id="pendencias">
+        <option value="NAO">Não</option>
+        <option value="SIM">Sim</option>
+      </select>
+      <label>Descrição da Pendência</label>
+      <input type="text" id="descPendencia">
+      <label>Exumação?</label>
+      <select id="exumacao">
+        <option value="NAO">Não</option>
+        <option value="SIM">Sim</option>
+      </select>
+      <label>Setor</label>
+      <input type="text" id="setor">
+      <button onclick="confirmarCadastro()">Confirmar</button>
+    </div>
+  </div>
+
+  <script>
+    const atendenteEl = document.getElementById("atendente");
+    const usuarioLogado = localStorage.getItem("usuarioLogado");
+    if(usuarioLogado) {
+      atendenteEl.textContent = usuarioLogado;
+    } else {
+      window.location.href = "login.html";
+    }
+
+    const dataInput = document.getElementById("dataSelecionada");
+    const dataTitulo = document.getElementById("dataTitulo");
+    const listaHorarios = document.getElementById("listaHorarios");
+    const modal = document.getElementById("modalCadastro");
+
+    let horarioSelecionado = null;
+    let dataSelecionada = null;
+
+    function formatarData(data) {
+      return new Date(data).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+
+    function gerarHorarios(data) {
+      listaHorarios.innerHTML = "";
+      const hoje = new Date();
+      const diaSelecionado = new Date(data);
+
+      const horarios = ["09:00","10:00","11:00","13:00","14:00","15:00","16:00"];
+      horarios.forEach(hora => {
+        const [h,m] = hora.split(":");
+        const horarioData = new Date(diaSelecionado);
+        horarioData.setHours(h, m);
+
+        const div = document.createElement("div");
+        div.classList.add("horario");
+        div.textContent = hora;
+
+        if(horarioData < hoje) {
+          div.classList.add("desabilitado");
+        }
+
+        div.addEventListener("click", () => {
+          if(!div.classList.contains("desabilitado")) {
+            horarioSelecionado = hora;
+            dataSelecionada = data;
+            abrirModal();
+          }
+        });
+
+        listaHorarios.appendChild(div);
+      });
+    }
+
+    dataInput.addEventListener("change", () => {
+      const data = dataInput.value;
+      if(data) {
+        dataTitulo.textContent = formatarData(data);
+        gerarHorarios(data);
+      }
+    });
+
+    function abrirModal() {
+      modal.style.display = "flex";
+    }
+    function fecharModal() {
+      modal.style.display = "none";
+    }
+
+    function confirmarCadastro() {
+      const falecido = document.getElementById("falecido").value.toUpperCase();
+      const pendencias = document.getElementById("pendencias").value;
+      const descPendencia = document.getElementById("descPendencia").value.toUpperCase();
+      const exumacao = document.getElementById("exumacao").value;
+      const setor = document.getElementById("setor").value.toUpperCase();
+
+      if(!falecido || !setor) {
+        alert("Preencha todos os campos obrigatórios!");
+        return;
+      }
+
+      alert(
+        `Sepultamento cadastrado:\n` +
+        `Atendente: ${usuarioLogado}\n` +
+        `Data: ${formatarData(dataSelecionada)}\n` +
+        `Horário: ${horarioSelecionado}\n` +
+        `Falecido: ${falecido}\n` +
+        `Pendências: ${pendencias}${pendencias === "SIM" ? " - " + descPendencia : ""}\n` +
+        `Exumação: ${exumacao}\n` +
+        `Setor: ${setor}`
+      );
+
+      fecharModal();
+    }
+  </script>
+</body>
+</html>
