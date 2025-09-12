@@ -27,7 +27,7 @@ function limparAgendamentosExpirados(){
     const [h,m] = a.Hora.split(":").map(Number);
     const dt = new Date(a.Data);
     dt.setHours(h,m,0,0);
-    dt.setDate(dt.getDate()+1); // expira 1 dia depois
+    dt.setDate(dt.getDate()+1);
     return dt > agora;
   });
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
@@ -49,10 +49,11 @@ function gerarHorarios(){
   if(!data) return;
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
+  const agora = new Date();
 
-  function criarHorarioDiv(hora){
+  function criarHorarioDiv(hora, periodo){
     const div = document.createElement("div");
-    div.classList.add("hora");
+    div.classList.add("hora", periodo);
     div.textContent = hora;
 
     const regOcupado = ocupados.find(r=>r.Hora===hora);
@@ -69,21 +70,27 @@ function gerarHorarios(){
         };
       }
     } else {
-      const agora = new Date();
-      const dataSelecionada = new Date(data+"T"+hora);
-      if(dataSelecionada < agora) div.classList.add("ocupado");
-      else div.onclick = () => selecionarHorario(div,hora);
+      // Bloquear horários retroativos no mesmo dia
+      const [h,m] = hora.split(":").map(Number);
+      const dtHorario = new Date(data);
+      dtHorario.setHours(h,m,0,0);
+      if(dtHorario < agora){
+        div.classList.add("ocupado");
+        div.dataset.tooltip = "Horário passado";
+      } else {
+        div.onclick = () => selecionarHorario(div,hora);
+      }
     }
     return div;
   }
 
-  // Separa manhã e tarde
-  const manha = document.createElement("div"); manha.style.marginBottom="10px";
-  horariosManha.forEach(h=>manha.appendChild(criarHorarioDiv(h)));
+  const manha = document.createElement("div");
+  manha.style.marginBottom="10px";
+  horariosManha.forEach(h=>manha.appendChild(criarHorarioDiv(h,"manha")));
   container.appendChild(manha);
 
   const tarde = document.createElement("div");
-  horariosTarde.forEach(h=>tarde.appendChild(criarHorarioDiv(h)));
+  horariosTarde.forEach(h=>tarde.appendChild(criarHorarioDiv(h,"tarde")));
   container.appendChild(tarde);
 }
 
@@ -113,31 +120,22 @@ function atualizarResumo(){
 function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value.trim();
-  const contrato = document.getElementById("contrato").value.trim();
-  const gavetas = document.getElementById("gavetas").value.trim();
-  const titular = document.getElementById("titular").value.trim();
+  const contrato = document.getElementById("contrato").value;
+  const gavetas = document.getElementById("gavetas").value;
+  const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
-  const descPendencia = document.getElementById("descPendencia").value.trim();
+  const descPendencia = document.getElementById("descPendencia").value;
   const exumacao = document.getElementById("exumacao").value;
-  const setor = document.getElementById("setor").value.trim();
+  const setor = document.getElementById("setor").value;
 
   if(!data || !horarioSelecionado || !falecido){
     alert("Preencha todos os campos e selecione um horário!");
     return;
   }
 
-  // Bloqueio de falecido duplicado no mesmo dia
-  const duplicado = agendamentos.find(a=>a.Data===data && a.Falecido.toLowerCase()===falecido.toLowerCase());
-  if(duplicado){
-    alert("Este falecido já está agendado para esta data!");
-    return;
-  }
-
-  // Bloqueio de horário passado
-  const agora = new Date();
-  const dtSelecionada = new Date(data+"T"+horarioSelecionado);
-  if(dtSelecionada < agora){
-    alert("Não é possível selecionar um horário passado!");
+  // Evitar duplicidade de falecido
+  if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
+    alert("Este falecido já está agendado!");
     return;
   }
 
@@ -159,7 +157,7 @@ function confirmarAgendamento(){
   gerarHorarios(); mostrarSepultamentosDia(); atualizarResumo();
 }
 
-// ===== MOSTRAR SEPULTAMENTOS DOS PRÓXIMOS 5 DIAS =====
+// ===== MOSTRAR SEPULTAMENTOS =====
 function mostrarSepultamentosDia(){
   limparAgendamentosExpirados();
   const container = document.getElementById("diasCalendario");
@@ -172,7 +170,7 @@ function mostrarSepultamentosDia(){
     cardDia.classList.add("cardDia");
 
     const titulo = document.createElement("h4");
-    titulo.textContent = dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
+    titulo.textContent = "SEPULTAMENTO - " + dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     cardDia.appendChild(titulo);
 
     const registros = agendamentos.filter(a=>a.Data===diaStr);
@@ -209,66 +207,45 @@ function mostrarSepultamentosDia(){
 }
 
 // ===== MODAL =====
-function abrirModal(a){
-  const modal = document.getElementById("modalResumo");
-  const info = document.getElementById("modalInfo");
-  
-  info.innerHTML = `
-    <p><b>FALECIDO:</b> ${a.Falecido}</p>
-    <p><b>TITULAR:</b> ${a.Titular||"-"}</p>
-    <p><b>NÚMERO DO CONTRATO:</b> ${a.Contrato||"-"} - "${a.Gavetas||"-"} ${a.Gavetas==1?'gaveta':'gavetas'}"</p>
-    <p><b>SETOR:</b> ${a.Setor||"-"}</p>
-    <p><b>HORÁRIO:</b> ${a.Hora||"-"}</p>
-    <p><b>PENDÊNCIAS:</b> ${a.Pendencias}</p>
-    <p><b>DESCRIÇÃO:</b> ${a.DescPendencia||"-"}</p>
+function abrirModal(ag){
+  document.getElementById("modalInfo").innerHTML=`
+    <p><b>Data:</b> ${ag.Data}</p>
+    <p><b>Hora:</b> ${ag.Hora}</p>
+    <p><b>Falecido:</b> ${ag.Falecido}</p>
+    <p><b>Titular:</b> ${ag.Titular}</p>
+    <p><b>Contrato:</b> ${ag.Contrato} (${ag.Gavetas} gavetas)</p>
+    <p><b>Pendências:</b> ${ag.Pendencias} - ${ag.DescPendencia}</p>
+    <p><b>Exumação:</b> ${ag.Exumacao}</p>
+    <p><b>Setor:</b> ${ag.Setor}</p>
+    <p><b>Atendente:</b> ${ag.Atendente}</p>
   `;
-
-  modal.style.display = "flex";
+  document.getElementById("modalResumo").style.display="flex";
 }
 
-function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
+function fecharModal(){
+  document.getElementById("modalResumo").style.display="none";
+}
 
-// ===== FUNÇÃO COPIAR RESUMO =====
+// ===== COPIAR RESUMO =====
 function copiarResumo(){
-  const texto = document.getElementById("modalInfo").innerText;
-  navigator.clipboard.writeText(texto)
-    .then(() => alert("Resumo copiado!"))
-    .catch(err => alert("Erro ao copiar: "+err));
+  navigator.clipboard.writeText(resumoEl.innerText);
+  alert("Resumo copiado!");
 }
 
-// ===== EDITAR =====
-function editarAgendamento(a){
-  dataInput.value = a.Data;
+// ===== EDITAR AGENDAMENTO =====
+function editarAgendamento(ag){
+  dataInput.value = ag.Data;
+  horarioSelecionado = ag.Hora;
+  document.getElementById("falecido").value=ag.Falecido;
+  document.getElementById("contrato").value=ag.Contrato;
+  document.getElementById("gavetas").value=ag.Gavetas;
+  document.getElementById("titular").value=ag.Titular;
+  document.getElementById("pendencias").value=ag.Pendencias;
+  document.getElementById("descPendencia").value=ag.DescPendencia;
+  document.getElementById("exumacao").value=ag.Exumacao;
+  document.getElementById("setor").value=ag.Setor;
   gerarHorarios();
-  setTimeout(()=>{
-    const divHora = Array.from(document.querySelectorAll(".hora")).find(h=>h.textContent===a.Hora);
-    if(divHora) selecionarHorario(divHora,a.Hora);
-  },50);
-
-  document.getElementById("falecido").value = a.Falecido;
-  document.getElementById("contrato").value = a.Contrato;
-  document.getElementById("gavetas").value = a.Gavetas;
-  document.getElementById("titular").value = a.Titular;
-  document.getElementById("pendencias").value = a.Pendencias;
-  document.getElementById("descPendencia").value = a.DescPendencia;
-  document.getElementById("exumacao").value = a.Exumacao;
-  document.getElementById("setor").value = a.Setor;
-
-  agendamentos = agendamentos.filter(x=>x!==a);
-  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+  atualizarResumo();
 }
 
-// ===== LIMITAR GAVETAS DE 1 A 3 =====
-document.getElementById("gavetas").addEventListener("input", e=>{
-  let val = parseInt(e.target.value);
-  if(val>3) e.target.value=3;
-  if(val<1) e.target.value=1;
-  atualizarResumo();
-});
-
-document.getElementById("contrato").addEventListener("input", atualizarResumo);
-document.getElementById("falecido").addEventListener("input", atualizarResumo);
-document.getElementById("titular").addEventListener("input", atualizarResumo);
-
-// ===== INICIALIZAÇÃO =====
 mostrarSepultamentosDia();
