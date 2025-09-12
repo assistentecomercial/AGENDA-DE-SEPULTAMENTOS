@@ -49,7 +49,6 @@ function gerarHorarios(){
   if(!data) return;
 
   const ocupados = agendamentos.filter(a=>a.Data===data);
-  const agora = new Date();
 
   function criarHorarioDiv(hora){
     const div = document.createElement("div");
@@ -70,38 +69,22 @@ function gerarHorarios(){
         };
       }
     } else {
-      // bloqueia horários retroativos do mesmo dia
-      const [h,m] = hora.split(":").map(Number);
-      const dataHora = new Date(data);
-      dataHora.setHours(h,m,0,0);
-      if(dataHora < agora){
-        div.classList.add("ocupado");
-        div.style.background="#6c757d"; // cinza
-        div.style.color="#fff";
-        div.style.cursor="not-allowed";
-      } else {
-        div.onclick = () => selecionarHorario(div,hora);
-      }
+      const agora = new Date();
+      const dataSelecionada = new Date(data+"T"+hora);
+      if(dataSelecionada < agora) div.classList.add("ocupado");
+      else div.onclick = () => selecionarHorario(div,hora);
     }
     return div;
   }
 
-  // Div Manhã
-  const manhaDiv = document.createElement("div");
-  manhaDiv.style.marginBottom="10px";
-  const tituloManha = document.createElement("h4");
-  tituloManha.textContent = "Manhã";
-  manhaDiv.appendChild(tituloManha);
-  horariosManha.forEach(h => manhaDiv.appendChild(criarHorarioDiv(h)));
-  container.appendChild(manhaDiv);
+  // Separa manhã e tarde
+  const manha = document.createElement("div"); manha.style.marginBottom="10px";
+  horariosManha.forEach(h=>manha.appendChild(criarHorarioDiv(h)));
+  container.appendChild(manha);
 
-  // Div Tarde
-  const tardeDiv = document.createElement("div");
-  const tituloTarde = document.createElement("h4");
-  tituloTarde.textContent = "Tarde";
-  tardeDiv.appendChild(tituloTarde);
-  horariosTarde.forEach(h => tardeDiv.appendChild(criarHorarioDiv(h)));
-  container.appendChild(tardeDiv);
+  const tarde = document.createElement("div");
+  horariosTarde.forEach(h=>tarde.appendChild(criarHorarioDiv(h)));
+  container.appendChild(tarde);
 }
 
 // ===== SELECIONAR HORÁRIO =====
@@ -143,9 +126,18 @@ function confirmarAgendamento(){
     return;
   }
 
-  // valida falecido duplicado no mesmo dia
-  if(agendamentos.some(a=>a.Data===data && a.Falecido.toLowerCase()===falecido.toLowerCase())){
-    alert("Falecido já agendado para esta data!");
+  // Bloqueio de falecido duplicado no mesmo dia
+  const duplicado = agendamentos.find(a=>a.Data===data && a.Falecido.toLowerCase()===falecido.toLowerCase());
+  if(duplicado){
+    alert("Este falecido já está agendado para esta data!");
+    return;
+  }
+
+  // Bloqueio de horário passado
+  const agora = new Date();
+  const dtSelecionada = new Date(data+"T"+horarioSelecionado);
+  if(dtSelecionada < agora){
+    alert("Não é possível selecionar um horário passado!");
     return;
   }
 
