@@ -47,6 +47,13 @@ body {
 .login-box button:hover {
   background: #218838;
 }
+#btnCalendario {
+  margin-top: 10px;
+  background: #17a2b8;
+}
+#btnCalendario:hover {
+  background: #138496;
+}
 </style>
 </head>
 <body>
@@ -56,6 +63,7 @@ body {
   <input type="text" id="usuario" placeholder="Usuário" required>
   <input type="password" id="senha" placeholder="Senha" required>
   <button onclick="fazerLogin()">Entrar</button>
+  <button id="btnCalendario" onclick="abrirCalendario()">Ver Calendário</button>
 </div>
 
 <script>
@@ -104,6 +112,11 @@ function fazerLogin(){
   localStorage.setItem("senhaLogada", senha);
   localStorage.setItem("isAdmin","false");
   window.location.href="agendamento.html";
+}
+
+// Função para abrir a página pública do calendário
+function abrirCalendario(){
+  window.location.href = "calendario.html";
 }
 </script>
 
