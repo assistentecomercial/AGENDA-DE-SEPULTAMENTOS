@@ -26,7 +26,7 @@ function limparAgendamentosExpirados(){
     const [h,m] = a.Hora.split(":").map(Number);
     const dt = new Date(a.Data);
     dt.setHours(h,m,0,0);
-    dt.setDate(dt.getDate()+1); // expira 1 dia depois
+    dt.setDate(dt.getDate()+1);
     return dt > agora;
   });
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
@@ -34,7 +34,7 @@ function limparAgendamentosExpirados(){
 limparAgendamentosExpirados();
 
 // ===== EVENTOS =====
-dataInput.addEventListener("change", ()=> {
+dataInput.addEventListener("change", ()=>{
   gerarHorarios();
   mostrarSepultamentosDia();
 });
@@ -54,12 +54,16 @@ function gerarHorarios(){
     div.classList.add("hora");
     div.textContent = hora;
 
-    // Bloquear se ocupado
     const regOcupado = ocupados.find(r=>r.Hora===hora);
-    if(regOcupado){
+    const agora = new Date();
+    const [h,m] = hora.split(":").map(Number);
+    const horarioData = new Date(data);
+    horarioData.setHours(h,m,0,0);
+
+    if(regOcupado || horarioData < agora){
       div.classList.add("ocupado");
-      div.dataset.tooltip = `${regOcupado.Falecido} (${regOcupado.Pendencias}) - ${regOcupado.Atendente}`;
-      if(isAdmin){
+      div.dataset.tooltip = regOcupado ? `${regOcupado.Falecido} (${regOcupado.Pendencias}) - ${regOcupado.Atendente}` : "Horário passado";
+      if(isAdmin && regOcupado){
         div.onclick = () => {
           if(confirm(`Excluir horário ${hora}?`)){
             agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
@@ -69,17 +73,7 @@ function gerarHorarios(){
         };
       }
     } else {
-      // Bloquear horários retroativos do mesmo dia
-      const agora = new Date();
-      const [h,m] = hora.split(":").map(Number);
-      const horarioData = new Date(data);
-      horarioData.setHours(h,m,0,0);
-      if(horarioData < agora){
-        div.classList.add("ocupado");
-        div.dataset.tooltip = "Horário passado";
-      } else {
-        div.onclick = () => selecionarHorario(div,hora);
-      }
+      div.onclick = () => selecionarHorario(div,hora);
     }
     return div;
   }
@@ -103,50 +97,50 @@ function selecionarHorario(div,hora){
 
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
-  const gavetas = document.getElementById("gavetas").value || "-";
   const contrato = document.getElementById("contrato").value || "-";
-  resumoEl.textContent =
-`FALECIDO: ${document.getElementById("falecido").value || "-"}
-TITULAR: ${document.getElementById("titular").value || "-"}
-NÚMERO DO CONTRATO: ${contrato} - "${gavetas} GAVETAS"
-SETOR: ${document.getElementById("setor").value || "-"}
-HORÁRIO: ${horarioSelecionado || "-"}
-
-PENDÊNCIAS: ${document.getElementById("pendencias").value || "-"}
-DESCRIÇÃO: ${document.getElementById("descPendencia").value || "-"}`;
+  const gavetas = document.getElementById("gavetas").value || "-";
+  resumoEl.innerHTML=`
+    <h3>Resumo do Agendamento</h3>
+    <p><b>Data:</b> ${dataInput.value||"-"}</p>
+    <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
+    <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
+    <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
+    <p><b>Nº do contrato:</b> ${contrato} - "${gavetas} ${gavetas == 1 ? 'gaveta' : 'gavetas'}"</p>
+    <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>`;
 }
 
 // ===== CONFIRMAR AGENDAMENTO =====
 function confirmarAgendamento(){
   const data = dataInput.value;
   const falecido = document.getElementById("falecido").value.trim();
-  const titular = document.getElementById("titular").value.trim();
-  const pendencias = document.getElementById("pendencias").value;
-  const descPendencia = document.getElementById("descPendencia").value.trim();
-  const exumacao = document.getElementById("exumacao").value;
-  const setor = document.getElementById("setor").value.trim();
   const contrato = document.getElementById("contrato").value.trim();
-  const gavetas = document.getElementById("gavetas").value;
+  const gavetas = document.getElementById("gavetas").value.trim();
+  const titular = document.getElementById("titular").value.trim();
+  const pendencias = document.getElementById("pendencias").value.trim();
+  const descPendencia = document.getElementById("descPendencia").value.trim();
+  const exumacao = document.getElementById("exumacao").value.trim();
+  const setor = document.getElementById("setor").value.trim();
 
   if(!data || !horarioSelecionado || !falecido){
     alert("Preencha todos os campos obrigatórios e selecione um horário!");
     return;
   }
 
-  // Bloquear falecido duplicado
+  // Evitar duplicidade
   const existeFalecido = agendamentos.find(a=>a.Falecido.toLowerCase()===falecido.toLowerCase());
   if(existeFalecido){
     alert("Este falecido já possui um agendamento!");
     return;
   }
 
+  // Adiciona ao array
   agendamentos.push({
     Data:data,
     Hora:horarioSelecionado,
     Falecido:falecido,
-    Titular:titular,
     Contrato:contrato,
     Gavetas:gavetas,
+    Titular:titular,
     Pendencias:pendencias,
     DescPendencia:descPendencia,
     Exumacao:exumacao,
@@ -159,7 +153,7 @@ function confirmarAgendamento(){
   abrirModal(agendamentos[agendamentos.length-1]);
 }
 
-// ===== MOSTRAR SEPULTAMENTOS DOS PRÓXIMOS 5 DIAS =====
+// ===== MOSTRAR SEPULTAMENTOS =====
 function mostrarSepultamentosDia(){
   limparAgendamentosExpirados();
   const container = document.getElementById("diasCalendario");
@@ -212,24 +206,24 @@ function mostrarSepultamentosDia(){
 function abrirModal(a){
   const modal = document.getElementById("modalResumo");
   const info = document.getElementById("modalInfo");
-  info.textContent =
-`FALECIDO: ${a.Falecido}
-TITULAR: ${a.Titular || "-"}
-NÚMERO DO CONTRATO: ${a.Contrato || "-"} - "${a.Gavetas || "-"} GAVETAS"
-SETOR: ${a.Setor || "-"}
-HORÁRIO: ${a.Hora}
-
-PENDÊNCIAS: ${a.Pendencias}
-DESCRIÇÃO: ${a.DescPendencia || "-"}`;
-  modal.style.display="flex";
+  
+  info.innerHTML = `
+    <p><b>FALECIDO:</b> ${a.Falecido}</p>
+    <p><b>TITULAR:</b> ${a.Titular||"-"}</p>
+    <p><b>NÚMERO DO CONTRATO:</b> ${a.Contrato||"-"} - "${a.Gavetas||"-"} ${a.Gavetas==1?'gaveta':'gavetas'}"</p>
+    <p><b>SETOR:</b> ${a.Setor||"-"}</p>
+    <p><b>HORÁRIO:</b> ${a.Hora||"-"}</p>
+    <p><b>PENDÊNCIAS:</b> ${a.Pendencias}</p>
+    <p><b>DESCRIÇÃO:</b> ${a.DescPendencia||"-"}</p>
+  `;
+  modal.style.display = "flex";
 }
 
 // ===== COPIAR RESUMO =====
 function copiarResumo(){
-  const texto = document.getElementById("modalInfo").textContent;
-  navigator.clipboard.writeText(texto).then(()=>{
-    alert("Resumo copiado para a área de transferência!");
-  });
+  const texto = document.getElementById("modalInfo").innerText;
+  navigator.clipboard.writeText(texto).then(()=>alert("Resumo copiado!"))
+                             .catch(err=>alert("Erro ao copiar: "+err));
 }
 
 function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
@@ -244,9 +238,9 @@ function editarAgendamento(a){
   },50);
 
   document.getElementById("falecido").value = a.Falecido;
-  document.getElementById("titular").value = a.Titular;
   document.getElementById("contrato").value = a.Contrato;
   document.getElementById("gavetas").value = a.Gavetas;
+  document.getElementById("titular").value = a.Titular;
   document.getElementById("pendencias").value = a.Pendencias;
   document.getElementById("descPendencia").value = a.DescPendencia;
   document.getElementById("exumacao").value = a.Exumacao;
@@ -255,6 +249,18 @@ function editarAgendamento(a){
   agendamentos = agendamentos.filter(x=>x!==a);
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
 }
+
+// ===== LIMITAR GAVETAS 1-3 =====
+document.getElementById("gavetas").addEventListener("input", e=>{
+  let val = parseInt(e.target.value);
+  if(val>3) e.target.value=3;
+  if(val<1) e.target.value=1;
+  atualizarResumo();
+});
+
+["contrato","falecido","titular"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", atualizarResumo);
+});
 
 // ===== INICIALIZAÇÃO =====
 mostrarSepultamentosDia();
