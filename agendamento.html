@@ -4,97 +4,45 @@
 <meta charset="UTF-8">
 <title>Agendamento - Sistema de Sepultamentos</title>
 <style>
-body {
-  font-family: Garamond, serif;
-  background: #f0f2f5;
-  margin:0;
-  padding:20px;
-  display:flex;
-  justify-content:center;
-}
-.container {
-  display:flex;
-  gap:20px;
-  flex-wrap:wrap;
-  max-width:1200px;
-  width:100%;
-}
-.agenda, .lista {
-  background:white;
-  border-radius:12px;
-  padding:20px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.15);
-  flex:1 1 400px;
-}
+body { font-family: Garamond, serif; background:#f0f2f5; margin:0; padding:20px;}
+.topo { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:10px; }
+.topo img { width:30px; height:30px; border-radius:50%; }
+.topo span { font-weight:bold; }
+.container { display:flex; gap:20px; flex-wrap:wrap; max-width:1200px; width:100%; }
+.agenda, .lista { background:white; border-radius:12px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex:1 1 400px; }
 h2 { color:#28a745; text-align:center; margin-bottom:15px; }
 label { font-weight:bold; display:block; margin-top:10px; }
 input, select, button { width:100%; padding:10px; margin:6px 0; border-radius:8px; border:1px solid #ccc; font-size:16px; }
 button { background:#28a745; color:white; border:none; cursor:pointer; transition:0.2s; }
 button:hover { background:#218838; transform:scale(1.02); }
 #horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
-.hora {
-  padding:12px;
-  border-radius:12px;
-  cursor:pointer;
-  flex:1 0 80px;
-  text-align:center;
-  background:#e9ecef;
-  transition:0.2s;
-  position: relative;
-}
+.hora { padding:12px; border-radius:12px; cursor:pointer; flex:1 0 80px; text-align:center; background:#e9ecef; transition:0.2s; position: relative; }
 .hora:hover { transform:translateY(-2px) scale(1.05); background:#d4edda; }
 .hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
 .hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
-.hora[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-  font-size: 12px;
-  opacity: 0.9;
-  pointer-events: none;
-}
+.hora[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background:#333; color:#fff; padding:6px 10px; border-radius:6px; white-space: nowrap; font-size:12px; opacity:0.9; pointer-events:none; }
 #resumo { display:block; margin-top:20px; padding:15px; border-radius:12px; background:#f8f9fa; border:1px solid #ccc; }
 .admin-controles { display:none; margin-top:20px; padding:15px; border-radius:12px; background:#f1f1f1; border:1px solid #666; }
 .lista-sepultamentos { margin-top:10px; max-height:500px; overflow-y:auto; }
-.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; cursor:pointer; }
+.lista-sepultamentos .card { background:#e9ecef; padding:10px; border-radius:10px; margin-bottom:8px; transition:0.2s; cursor:pointer; position:relative; }
 .lista-sepultamentos .card:hover { transform:translateY(-2px); box-shadow:0 4px 8px rgba(0,0,0,0.15); }
 .lista-sepultamentos .card h4 { margin:0 0 5px 0; color:#28a745; }
-.modal {
-  display:none;
-  position:fixed;
-  top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,0.5);
-  justify-content:center;
-  align-items:center;
-  z-index:100;
-}
-.modal-content {
-  background:white;
-  padding:20px;
-  border-radius:12px;
-  width:350px;
-  max-width:90%;
-  position:relative;
-}
+.card button { margin-top:5px; font-size:12px; padding:4px 8px; border-radius:6px; border:none; cursor:pointer; }
+.card .editar { background:#ffc107; color:#fff; }
+.card .excluir { background:#dc3545; color:#fff; }
+.modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:100; }
+.modal-content { background:white; padding:20px; border-radius:12px; width:350px; max-width:90%; position:relative; }
 .modal-content h3 { margin-top:0; color:#28a745; }
-.close-modal {
-  position:absolute;
-  top:10px; right:10px;
-  cursor:pointer;
-  font-weight:bold;
-  font-size:18px;
-}
+.close-modal { position:absolute; top:10px; right:10px; cursor:pointer; font-weight:bold; font-size:18px; }
 @media(max-width:900px){ .container{flex-direction:column;} }
 </style>
 </head>
 <body>
+
+<div class="topo">
+  <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Usuário">
+  <span id="nomeUsuario"></span>
+</div>
 
 <div class="container">
   <div class="agenda">
@@ -130,7 +78,6 @@ button:hover { background:#218838; transform:scale(1.02); }
     <button onclick="confirmarAgendamento()">Confirmar</button>
 
     <div id="resumo"></div>
-    <div id="adminControles" class="admin-controles"></div>
   </div>
 
   <div class="lista">
@@ -139,7 +86,6 @@ button:hover { background:#218838; transform:scale(1.02); }
   </div>
 </div>
 
-<!-- Modal resumo -->
 <div class="modal" id="modalResumo">
   <div class="modal-content" id="modalContent">
     <span class="close-modal" onclick="fecharModal()">&times;</span>
@@ -155,7 +101,7 @@ const horariosPadrao = [
 
 const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
 const isAdmin = localStorage.getItem("isAdmin") === "true";
-if(isAdmin) document.getElementById("adminControles").style.display="block";
+document.getElementById("nomeUsuario").textContent = usuarioLogado;
 
 let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
@@ -180,13 +126,9 @@ function limparAgendamentosExpirados(){
   });
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
 }
-
 limparAgendamentosExpirados();
 
-dataInput.addEventListener("change", () => {
-  gerarHorarios();
-  mostrarSepultamentosDia();
-});
+dataInput.addEventListener("change", () => { gerarHorarios(); mostrarSepultamentosDia(); });
 
 function gerarHorarios(){
   const data = dataInput.value;
@@ -207,18 +149,17 @@ function gerarHorarios(){
       div.classList.add("ocupado");
       div.dataset.tooltip = `${registroOcupado.Falecido} (${registroOcupado.Pendencias})`;
       if(isAdmin){
-        div.title="Clique para desbloquear (Admin)";
-        div.onclick = ()=>{
-          if(confirm(`Desbloquear horário ${hora}?`)){
+        div.title="Clique para excluir (Admin)";
+        div.onclick = () => {
+          if(confirm(`Excluir horário ${hora}?`)){
             agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
             localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
-            gerarHorarios();
-            mostrarSepultamentosDia();
+            gerarHorarios(); mostrarSepultamentosDia();
           }
         };
       }
     } else {
-      div.onclick = ()=>selecionarHorario(div,hora);
+      div.onclick = () => selecionarHorario(div,hora);
     }
     container.appendChild(div);
   });
@@ -234,16 +175,39 @@ function selecionarHorario(div,hora){
 function mostrarSepultamentosDia(){
   const data = dataInput.value;
   const listaEl = document.getElementById("listaDia");
-  listaEl.innerHTML = "";
-  if(!data) return;
-
-  const doDia = agendamentos.filter(a=>a.Data===data);
-  doDia.forEach(r=>{
+  listaEl.innerHTML="";
+  const dia = agendamentos.filter(a=>a.Data===data);
+  dia.forEach(a=>{
     const card = document.createElement("div");
     card.classList.add("card");
-    card.innerHTML=`<h4>${r.Hora}</h4>
-                    <p><b>Falecido:</b> ${r.Falecido}</p>`;
-    card.onclick = ()=>abrirModal(r);
+    card.innerHTML=`<h4>${a.Hora}</h4>
+                    <p>${a.Falecido}</p>`;
+    card.onclick = ()=>abrirModal(a);
+
+    if(isAdmin){
+      const btnEx = document.createElement("button");
+      btnEx.textContent="Excluir";
+      btnEx.classList.add("excluir");
+      btnEx.onclick = (e)=>{ 
+        e.stopPropagation();
+        if(confirm("Deseja excluir este agendamento?")){
+          agendamentos = agendamentos.filter(x=>x!==a);
+          localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+          gerarHorarios(); mostrarSepultamentosDia();
+        }
+      };
+      card.appendChild(btnEx);
+    } else if(a.Atendente===usuarioLogado){
+      const btnEd = document.createElement("button");
+      btnEd.textContent="Editar";
+      btnEd.classList.add("editar");
+      btnEd.onclick = (e)=>{
+        e.stopPropagation();
+        editarAgendamento(a);
+      };
+      card.appendChild(btnEd);
+    }
+
     listaEl.appendChild(card);
   });
 }
@@ -261,7 +225,7 @@ function confirmarAgendamento(){
     return;
   }
 
-  agendamentos.push({
+  const novoAgendamento = {
     Data:data,
     Hora:horarioSelecionado,
     Falecido:falecido,
@@ -270,12 +234,13 @@ function confirmarAgendamento(){
     Exumacao:exumacao,
     Setor:setor,
     Atendente:usuarioLogado
-  });
+  };
 
+  agendamentos.push(novoAgendamento);
   localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+  atualizarResumo();
   gerarHorarios();
   mostrarSepultamentosDia();
-  atualizarResumo();
 }
 
 function atualizarResumo(){
@@ -287,22 +252,40 @@ function atualizarResumo(){
     <p><b>Atendente:</b> ${usuarioLogado || "-"}</p>`;
 }
 
-// Modal
-function abrirModal(agendamento){
+function editarAgendamento(a){
+  dataInput.value = a.Data;
+  gerarHorarios();
+  setTimeout(()=>{
+    const divHora = Array.from(document.querySelectorAll(".hora")).find(h=>h.textContent===a.Hora);
+    if(divHora) selecionarHorario(divHora,a.Hora);
+  },50);
+  document.getElementById("falecido").value = a.Falecido;
+  document.getElementById("pendencias").value = a.Pendencias;
+  document.getElementById("descPendencia").value = a.DescPendencia;
+  document.getElementById("exumacao").value = a.Exumacao;
+  document.getElementById("setor").value = a.Setor;
+
+  agendamentos = agendamentos.filter(x=>x!==a);
+  localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+}
+
+function abrirModal(a){
   const modal = document.getElementById("modalResumo");
   const info = document.getElementById("modalInfo");
-  info.innerHTML = `<h3>${agendamento.Falecido}</h3>
-                    <p><b>Data:</b> ${agendamento.Data}</p>
-                    <p><b>Hora:</b> ${agendamento.Hora}</p>
-                    <p><b>Pendências:</b> ${agendamento.Pendencias}</p>
-                    <p><b>Descrição:</b> ${agendamento.DescPendencia || "-"}</p>
-                    <p><b>Exumação:</b> ${agendamento.Exumacao}</p>
-                    <p><b>Setor:</b> ${agendamento.Setor || "-"}</p>
-                    <p><b>Atendente:</b> ${agendamento.Atendente}</p>`;
+  info.innerHTML=`<h3>${a.Falecido}</h3>
+                  <p><b>Data:</b> ${a.Data}</p>
+                  <p><b>Hora:</b> ${a.Hora}</p>
+                  <p><b>Pendências:</b> ${a.Pendencias}</p>
+                  <p><b>Descrição:</b> ${a.DescPendencia || "-"}</p>
+                  <p><b>Exumação:</b> ${a.Exumacao}</p>
+                  <p><b>Setor:</b> ${a.Setor || "-"}</p>
+                  <p><b>Atendente:</b> ${a.Atendente}</p>`;
   modal.style.display="flex";
 }
+
 function fecharModal(){ document.getElementById("modalResumo").style.display="none"; }
 
 </script>
+
 </body>
 </html>
