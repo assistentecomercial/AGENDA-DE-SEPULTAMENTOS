@@ -16,24 +16,27 @@ let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 
-// Limita datas (hoje até 5 dias à frente)
+// Limita datas (hoje até 5 dias)
 const hoje = new Date();
 const maxData = new Date();
 maxData.setDate(hoje.getDate() + 5);
 dataInput.min = hoje.toISOString().split("T")[0];
 dataInput.max = maxData.toISOString().split("T")[0];
 
-// Evento mudança de data
-dataInput.addEventListener("change", () => {
-  if(!dataInput.value){
-    document.getElementById("horarios").innerHTML = "Escolha uma data para ver os horários disponíveis";
-  } else {
-    gerarHorarios();
-    mostrarSepultamentosDia();
-  }
+// Preenche hoje automaticamente
+window.addEventListener("load", () => {
+  dataInput.value = hoje.toISOString().split("T")[0];
+  gerarHorarios();
+  mostrarSepultamentosDia();
 });
 
-// Função para gerar horários
+// Ao mudar data
+dataInput.addEventListener("change", () => {
+  gerarHorarios();
+  mostrarSepultamentosDia();
+});
+
+// Gerar horários clicáveis
 async function gerarHorarios(){
   const data = dataInput.value;
   const container = document.getElementById("horarios");
@@ -65,11 +68,11 @@ async function gerarHorarios(){
     } else {
       div.onclick = () => selecionarHorario(div,hora);
     }
+
     container.appendChild(div);
   });
 }
 
-// Selecionar horário
 function selecionarHorario(div,hora){
   document.querySelectorAll(".hora").forEach(h => h.classList.remove("selecionado"));
   div.classList.add("selecionado");
@@ -77,17 +80,17 @@ function selecionarHorario(div,hora){
   atualizarResumo();
 }
 
-// Buscar horários ocupados
+// Buscar horários ocupados Airtable
 async function buscarHorariosOcupados(data){
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={Data}='${data}'`;
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula=DATETIME_FORMAT({Data}, 'YYYY-MM-DD')='${data}'`;
   const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
   const dados = await resposta.json();
   return dados.records.map(r=>({
     id: r.id,
-    Hora:r.fields.Hora,
-    Falecido:r.fields.Falecido,
-    Pendencias:r.fields.Pendencias,
-    Setor:r.fields.Setor
+    Hora: r.fields.Hora,
+    Falecido: r.fields.Falecido,
+    Pendencias: r.fields.Pendencias,
+    Setor: r.fields.Setor
   }));
 }
 
@@ -98,7 +101,7 @@ async function mostrarSepultamentosDia(){
   listaEl.innerHTML = "";
   if(!data) return;
 
-  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula={Data}='${data}'`;
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}?filterByFormula=DATETIME_FORMAT({Data}, 'YYYY-MM-DD')='${data}'`;
   const resposta = await fetch(url,{headers:{Authorization:`Bearer ${API_KEY}`}});
   const dados = await resposta.json();
 
@@ -148,7 +151,7 @@ async function confirmarAgendamento(){
   mostrarSepultamentosDia();
 }
 
-// Cancelar agendamento pelo admin
+// Cancelar agendamento
 async function deletarAgendamento(id){
   await fetch(`https://api.airtable.com/v0/${BASE_ID}/${TABLE_NAME}/${id}`,{
     method:"DELETE", 
