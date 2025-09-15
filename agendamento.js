@@ -70,23 +70,22 @@ function gerarHorarios(){
         };
       }
     } else {
-      // Bloqueia apenas horários anteriores ao horário atual do dia de hoje
+      // Horários livres
       const [h,m] = hora.split(":").map(Number);
-      const dtHorario = new Date(data);
-      dtHorario.setHours(h,m,0,0);
+      const dtHorario = new Date(data + "T" + hora + ":00-03:00"); // horário de Brasília
 
-      if (data === hojeStr) {
-        const agora = new Date(); // pega o horário exato da verificação
-        if (dtHorario < agora) {
-          div.classList.add("ocupado");
-          div.dataset.tooltip = "Horário passado";
-        } else {
-          div.onclick = () => selecionarHorario(div,hora);
-        }
-      } else {
+      let bloqueado = false;
+      if(data === hojeStr && dtHorario < new Date()){ 
+        div.classList.add("ocupado");
+        div.dataset.tooltip = "Horário passado";
+        bloqueado = true;
+      }
+
+      if(!bloqueado){
         div.onclick = () => selecionarHorario(div,hora);
       }
     }
+
     return div;
   }
 
@@ -120,7 +119,16 @@ function atualizarResumo(){
     <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
     <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
     <p><b>Nº do contrato:</b> ${contrato} - "${gavetas} ${gavetas == 1 ? 'gaveta' : 'gavetas'}"</p>
-    <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>`;
+    <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>
+    <button onclick="enviarWhatsApp()">Enviar para WhatsApp</button>
+  `;
+}
+
+// ===== ENVIAR PARA WHATSAPP =====
+function enviarWhatsApp(){
+  const texto = resumoEl.innerText.replace(/\n/g,"%0A");
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+  window.open(url,"_blank");
 }
 
 // ===== CONFIRMAR AGENDAMENTO =====
@@ -129,10 +137,7 @@ function confirmarAgendamento(){
   const falecido = document.getElementById("falecido").value.trim();
   const contrato = document.getElementById("contrato").value;
   let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
-  if(gavetas > 3) {
-    alert("O número máximo de gavetas por falecido é 3!");
-    return;
-  }
+  if(gavetas > 3) gavetas = 3;
   const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
@@ -144,9 +149,8 @@ function confirmarAgendamento(){
     return;
   }
 
-  // Verifica se já existe um agendamento para este horário
-  if(agendamentos.some(a=>a.Data===data && a.Hora===horarioSelecionado)){
-    alert("Já existe um falecido agendado nesse horário!");
+  if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
+    alert("Este falecido já está agendado!");
     return;
   }
 
@@ -224,11 +228,13 @@ function abrirModal(ag){
     <p><b>Hora:</b> ${ag.Hora}</p>
     <p><b>Falecido:</b> ${ag.Falecido}</p>
     <p><b>Titular:</b> ${ag.Titular}</p>
-    <p><b>Contrato:</b> ${ag.Contrato} (${ag.Gavetas} ${ag.Gavetas === 1 ? 'gaveta' : 'gavetas'})</p>
+    <p><b>Contrato:</b> ${ag.Contrato} (${ag.Gavetas} ${ag.Gavetas==1?"gaveta":"gavetas"})</p>
     <p><b>Pendências:</b> ${ag.Pendencias} - ${ag.DescPendencia}</p>
     <p><b>Exumação:</b> ${ag.Exumacao}</p>
     <p><b>Setor:</b> ${ag.Setor}</p>
     <p><b>Atendente:</b> ${ag.Atendente}</p>
+    <button onclick="copiarResumo()">Copiar Resumo</button>
+    <button onclick="enviarWhatsApp()">Enviar para WhatsApp</button>
   `;
   document.getElementById("modalResumo").style.display="flex";
 }
