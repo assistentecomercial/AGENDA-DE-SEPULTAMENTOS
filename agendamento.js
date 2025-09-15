@@ -71,11 +71,14 @@ function gerarHorarios(){
         };
       }
     } else {
-      // Bloqueia horários passados apenas do dia atual
-      const [h,m] = hora.split(":").map(Number);
-      const dtHorario = new Date(data);
-      dtHorario.setHours(h,m,0,0);
-
+      // Bloqueia apenas horários anteriores ao horário atual do dia de hoje
+if (data === hojeStr) {
+  const agora = new Date(); // pega o horário exato da verificação
+  if (dtHorario < agora) {
+    div.classList.add("ocupado");
+    div.dataset.tooltip = "Horário passado";
+  }
+}
       if(data === hojeStr && dtHorario < agora){
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
