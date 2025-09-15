@@ -13,6 +13,16 @@ const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
 
+// ===== LIMITAR GAVETAS NO INPUT =====
+const gavetasInput = document.getElementById("gavetas");
+gavetasInput.addEventListener("input", ()=>{
+  let valor = parseInt(gavetasInput.value) || 1;
+  if(valor > 3) valor = 3;
+  if(valor < 1) valor = 1;
+  gavetasInput.value = valor;
+  atualizarResumo();
+});
+
 // ===== CONFIGURAÇÕES DE DATA =====
 const hoje = new Date();
 const hojeStr = hoje.toISOString().split("T")[0];
