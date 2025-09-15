@@ -77,8 +77,7 @@ if (data === hojeStr) {
   if (dtHorario < agora) {
     div.classList.add("ocupado");
     div.dataset.tooltip = "Horário passado";
-  }
-}
+
       if(data === hojeStr && dtHorario < agora){
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
