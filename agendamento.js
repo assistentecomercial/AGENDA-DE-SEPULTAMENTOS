@@ -37,8 +37,8 @@ dataInput.addEventListener("input", () => {
 });
 
 // ===== SUPABASE =====
-const SUPABASE_URL = "COLE_AQUI_SUA_URL";
-const SUPABASE_KEY = "COLE_AQUI_SUA_ANON_KEY";
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ===== FUNÇÕES SUPABASE =====
@@ -230,3 +230,17 @@ async function mostrarSepultamentosDia(){
   container.innerHTML="";
 
   for(let i=0;i<5;i++){
+    const dia = new Date();
+    dia.setDate(hoje.getDate()+i);
+    const diaStr = dia.toISOString().split("T")[0];
+    const cardDia = document.createElement("div");
+    cardDia.classList.add("cardDia");
+
+    const titulo = document.createElement("h4");  
+    titulo.textContent = "SEPULTAMENTO - " + dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});  
+    cardDia.appendChild(titulo);  
+
+    const registros = await buscarAgendamentos(diaStr);  
+    if(registros.length===0){  
+      const vazio = document.createElement("p"); vazio.textContent="Nenhum agendamento";  
+      cardDia.append
