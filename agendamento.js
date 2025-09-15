@@ -15,7 +15,7 @@ let agendamentos = [];
 
 // ===== LIMITAR GAVETAS =====
 const gavetasInput = document.getElementById("gavetas");
-gavetasInput.addEventListener("blur", ()=> {
+gavetasInput.addEventListener("blur", () => {
   let valor = parseInt(gavetasInput.value) || 1;
   if (valor > 3) valor = 3;
   if (valor < 1) valor = 1;
@@ -79,8 +79,7 @@ supabase
 // ===== LIMPAR AGENDAMENTOS EXPIRADOS =====
 async function limparAgendamentosExpirados(){
   const agora = new Date();
-  const todos = await supabase.from('agendamentos').select('*');
-  for(const ag of (todos.data || [])){
+  for(const ag of agendamentos){
     const [h,m] = ag.hora.split(":").map(Number);
     const dt = new Date(ag.data);
     dt.setHours(h,m,0,0);
@@ -98,53 +97,53 @@ dataInput.addEventListener("change", ()=>{
 });
 
 // ===== GERAR HORÁRIOS =====
-async function gerarHorarios() {
+async function gerarHorarios(){
   const data = dataInput.value;
   const container = document.getElementById("horarios");
-  container.innerHTML = "";
+  container.innerHTML="";
   horarioSelecionado = null;
-  if (!data) return;
+  if(!data) return;
 
   agendamentos = await buscarAgendamentos(data);
 
-  function criarHorarioDiv(hora, periodo) {
+  function criarHorarioDiv(hora, periodo){
     const div = document.createElement("div");
     div.classList.add("hora", periodo);
     div.textContent = hora;
 
-    const regOcupado = agendamentos.find(r => r.hora === hora);
-    if (regOcupado) {
-      div.classList.add("ocupado");
-      div.dataset.tooltip = `${regOcupado.falecido} (${regOcupado.pendencias}) - ${regOcupado.atendente}`;
-      if (isAdmin) {
-        div.onclick = async () => {
-          if (confirm(`Excluir horário ${hora}?`)) {
+    const regOcupado = agendamentos.find(r=>r.hora===hora);  
+    if(regOcupado){  
+      div.classList.add("ocupado");  
+      div.dataset.tooltip = `${regOcupado.falecido} (${regOcupado.pendencias}) - ${regOcupado.atendente}`;  
+      if(isAdmin){  
+        div.onclick = async () => {  
+          if(confirm(`Excluir horário ${hora}?`)){  
             await excluirAgendamento(regOcupado.id);
-            await gerarHorarios();
-            await mostrarSepultamentosDia();
-          }
-        };
-      }
-    } else {
+            gerarHorarios(); 
+            mostrarSepultamentosDia();  
+          }  
+        };  
+      }  
+    } else {  
       const dtHorario = new Date(`${data}T${hora}:00-03:00`);
-      if(data === hojeStr && dtHorario < new Date()) {
-        div.classList.add("ocupado");
-        div.dataset.tooltip = "Horário passado";
-      } else {
-        div.onclick = () => selecionarHorario(div,hora);
-      }
-    }
+      if(data === hojeStr && dtHorario < new Date()){   
+        div.classList.add("ocupado");  
+        div.dataset.tooltip = "Horário passado";  
+      } else {  
+        div.onclick = () => selecionarHorario(div,hora);  
+      }  
+    }  
 
     return div;
   }
 
   const manha = document.createElement("div");
-  manha.style.marginBottom = "10px";
-  horariosManha.forEach(h => manha.appendChild(criarHorarioDiv(h, "manha")));
+  manha.style.marginBottom="10px";
+  horariosManha.forEach(h=>manha.appendChild(criarHorarioDiv(h,"manha")));
   container.appendChild(manha);
 
   const tarde = document.createElement("div");
-  horariosTarde.forEach(h => tarde.appendChild(criarHorarioDiv(h, "tarde")));
+  horariosTarde.forEach(h=>tarde.appendChild(criarHorarioDiv(h,"tarde")));
   container.appendChild(tarde);
 }
 
@@ -209,9 +208,6 @@ async function confirmarAgendamento(){
     return;
   }
 
-  // Atualizar lista do dia do Supabase antes de inserir
-  agendamentos = await buscarAgendamentos(data);
-
   if(agendamentos.some(a=>a.falecido.toLowerCase() === falecido.toLowerCase())){
     alert("Este falecido já está agendado!");
     return;
@@ -232,8 +228,8 @@ async function confirmarAgendamento(){
   };
 
   await salvarAgendamentoSupabase(ag);
-  await gerarHorarios();
-  await mostrarSepultamentosDia();
+  gerarHorarios(); 
+  mostrarSepultamentosDia(); 
   atualizarResumo();
 }
 
@@ -254,7 +250,7 @@ async function mostrarSepultamentosDia(){
     titulo.textContent = "SEPULTAMENTO - " + dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     cardDia.appendChild(titulo);
 
-    const registros = await buscarAgendamentos(diaStr);
+    const registros = agendamentos.filter(a=>a.data===diaStr);
     if(registros.length===0){
       const vazio = document.createElement("p"); vazio.textContent="Nenhum agendamento";
       cardDia.appendChild(vazio);
@@ -268,8 +264,8 @@ async function mostrarSepultamentosDia(){
 
       if(isAdmin){
         const btn = document.createElement("button"); btn.textContent="Excluir"; btn.classList.add("excluir");
-        btn.onclick = async e=>{ e.stopPropagation(); if(confirm("Excluir agendamento?")){ 
-          await excluirAgendamento(a.id); 
+        btn.onclick = e=>{ e.stopPropagation(); if(confirm("Excluir agendamento?")){ 
+          excluirAgendamento(a.id);
           mostrarSepultamentosDia(); gerarHorarios(); 
         }};
         div.appendChild(btn);
