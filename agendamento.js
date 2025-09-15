@@ -57,13 +57,13 @@ function gerarHorarios(){
     div.classList.add("hora", periodo);
     div.textContent = hora;
 
-    const regOcupado = ocupados.find(r=>r.Hora===hora);
-    if(regOcupado){
+    const agendamentoHora = ocupados.find(a=>a.Hora === hora);
+    if(agendamentoHora){
       div.classList.add("ocupado");
-      div.dataset.tooltip = `${regOcupado.Falecido} (${regOcupado.Pendencias}) - ${regOcupado.Atendente}`;
+      div.dataset.tooltip = `${agendamentoHora.Falecido} (${agendamentoHora.Gavetas} ${agendamentoHora.Gavetas===1?'gaveta':'gavetas'}) - ${agendamentoHora.Atendente}`;
       if(isAdmin){
         div.onclick = () => {
-          if(confirm(`Excluir horário ${hora}?`)){
+          if(confirm(`Excluir agendamento de ${agendamentoHora.Falecido} às ${hora}?`)){
             agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
             localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
             gerarHorarios(); mostrarSepultamentosDia();
@@ -107,7 +107,7 @@ function selecionarHorario(div,hora){
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
   const contrato = document.getElementById("contrato").value || "-";
-  let gavetas = parseInt(document.getElementById("gavetas").value) || "-";
+  let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
   if(gavetas > 3) gavetas = 3;
   resumoEl.innerHTML=`
     <h3>Resumo do Agendamento</h3>
@@ -115,7 +115,7 @@ function atualizarResumo(){
     <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
     <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
     <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
-    <p><b>Nº do contrato:</b> ${contrato} - "${gavetas} ${gavetas == 1 ? 'gaveta' : 'gavetas'}"</p>
+    <p><b>Nº do contrato:</b> ${contrato} - ${gavetas} ${gavetas===1 ? 'gaveta' : 'gavetas'}</p>
     <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>`;
 }
 
@@ -125,7 +125,10 @@ function confirmarAgendamento(){
   const falecido = document.getElementById("falecido").value.trim();
   const contrato = document.getElementById("contrato").value;
   let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
-  if(gavetas > 3) gavetas = 3;
+  if(gavetas < 1 || gavetas > 3){
+    alert("O número de gavetas deve ser entre 1 e 3.");
+    return;
+  }
   const titular = document.getElementById("titular").value;
   const pendencias = document.getElementById("pendencias").value;
   const descPendencia = document.getElementById("descPendencia").value;
@@ -137,8 +140,9 @@ function confirmarAgendamento(){
     return;
   }
 
-  if(agendamentos.some(a=>a.Falecido.toLowerCase() === falecido.toLowerCase())){
-    alert("Este falecido já está agendado!");
+  // Verifica se já existe agendamento no mesmo horário
+  if(agendamentos.some(a=>a.Data===data && a.Hora===horarioSelecionado)){
+    alert("Este horário já está ocupado por outro falecido!");
     return;
   }
 
@@ -216,7 +220,7 @@ function abrirModal(ag){
     <p><b>Hora:</b> ${ag.Hora}</p>
     <p><b>Falecido:</b> ${ag.Falecido}</p>
     <p><b>Titular:</b> ${ag.Titular}</p>
-    <p><b>Contrato:</b> ${ag.Contrato} (${ag.Gavetas} gavetas)</p>
+    <p><b>Contrato:</b> ${ag.Contrato} (${ag.Gavetas} ${ag.Gavetas===1?'gaveta':'gavetas'})</p>
     <p><b>Pendências:</b> ${ag.Pendencias} - ${ag.DescPendencia}</p>
     <p><b>Exumação:</b> ${ag.Exumacao}</p>
     <p><b>Setor:</b> ${ag.Setor}</p>
