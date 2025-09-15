@@ -13,13 +13,13 @@ const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
 
-// ===== LIMITAR GAVETAS NO INPUT =====
+// ===== LIMITAR GAVETAS (digitável, mas corrigido ao sair) =====
 const gavetasInput = document.getElementById("gavetas");
-gavetasInput.addEventListener("input", ()=> {
+gavetasInput.addEventListener("blur", ()=> {
   let valor = parseInt(gavetasInput.value) || 1;
   if (valor > 3) valor = 3;
   if (valor < 1) valor = 1;
-  gavetasInput.value = valor; // força o valor dentro do limite
+  gavetasInput.value = valor;
   atualizarResumo();
 });
 
@@ -91,10 +91,9 @@ function gerarHorarios(){
       }
     } else {
       // Horários livres
-      const [h,m] = hora.split(":").map(Number);
-      const dtHorario = new Date(data + "T" + hora + ":00-03:00"); // horário de Brasília
-
+      const dtHorario = new Date(`${data}T${hora}:00-03:00`); // horário de Brasília
       let bloqueado = false;
+
       if(data === hojeStr && dtHorario < new Date()){ 
         div.classList.add("ocupado");
         div.dataset.tooltip = "Horário passado";
@@ -145,10 +144,11 @@ function atualizarResumo(){
 }
 
 // ===== ENVIAR PARA WHATSAPP =====
-function enviarWhatsApp(){
-  const texto = resumoEl.innerText.replace(/\n/g,"%0A");
-  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
-  window.open(url,"_blank");
+function enviarWhatsApp() {
+  const resumoTexto = resumoEl.innerText; // texto puro
+  const numero = "55SEUNUMEROAQUI"; // coloque o número do grupo/celular
+  const url = `https://wa.me/${numero}?text=${encodeURIComponent(resumoTexto)}`;
+  window.open(url, "_blank");
 }
 
 // ===== CONFIRMAR AGENDAMENTO =====
