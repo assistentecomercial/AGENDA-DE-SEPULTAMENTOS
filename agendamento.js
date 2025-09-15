@@ -15,11 +15,11 @@ let agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
 
 // ===== LIMITAR GAVETAS NO INPUT =====
 const gavetasInput = document.getElementById("gavetas");
-gavetasInput.addEventListener("input", ()=>{
+gavetasInput.addEventListener("input", ()=> {
   let valor = parseInt(gavetasInput.value) || 1;
-  if(valor > 3) valor = 3;
-  if(valor < 1) valor = 1;
-  gavetasInput.value = valor;
+  if (valor > 3) valor = 3;
+  if (valor < 1) valor = 1;
+  gavetasInput.value = valor; // força o valor dentro do limite
   atualizarResumo();
 });
 
@@ -27,9 +27,19 @@ gavetasInput.addEventListener("input", ()=>{
 const hoje = new Date();
 const hojeStr = hoje.toISOString().split("T")[0];
 const maxData = new Date();
-maxData.setDate(hoje.getDate()+5);
+maxData.setDate(hoje.getDate() + 5);
 dataInput.min = hojeStr;
 dataInput.max = maxData.toISOString().split("T")[0];
+
+// Impede selecionar datas fora do intervalo
+dataInput.addEventListener("input", () => {
+  if (dataInput.value < hojeStr) {
+    dataInput.value = hojeStr;
+  }
+  if (dataInput.value > dataInput.max) {
+    dataInput.value = dataInput.max;
+  }
+});
 
 // ===== LIMPAR AGENDAMENTOS EXPIRADOS =====
 function limparAgendamentosExpirados(){
