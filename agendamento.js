@@ -53,21 +53,37 @@ function gerarHorarios(){
   const agora = new Date();
 
   function criarHorarioDiv(hora, periodo){
-    const div = document.createElement("div");
-    div.classList.add("hora", periodo);
-    div.textContent = hora;
+  const div = document.createElement("div");
+  div.classList.add("hora", periodo);
+  div.textContent = hora;
 
-    const regOcupado = ocupados.find(r=>r.Hora===hora);
-    if(regOcupado){
+  const regOcupado = ocupados.find(r=>r.Hora===hora);
+  if(regOcupado){
+    div.classList.add("ocupado");
+    div.dataset.tooltip = `${regOcupado.Falecido} (${regOcupado.Pendencias}) - ${regOcupado.Atendente}`;
+    if(isAdmin){
+      div.onclick = () => {
+        if(confirm(`Excluir horário ${hora}?`)){
+          agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
+          localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
+          gerarHorarios(); mostrarSepultamentosDia();
+        }
+      };
+    }
+  } else {
+    const [h,m] = hora.split(":").map(Number);
+    const dtHorario = new Date(data + "T" + hora + ":00");
+
+    // Bloquear só horários já passados no dia atual
+    if(data === hoje.toISOString().split("T")[0] && dtHorario < agora){
       div.classList.add("ocupado");
-      div.dataset.tooltip = `${regOcupado.Falecido} (${regOcupado.Pendencias}) - ${regOcupado.Atendente}`;
-      if(isAdmin){
-        div.onclick = () => {
-          if(confirm(`Excluir horário ${hora}?`)){
-            agendamentos = agendamentos.filter(a=>!(a.Data===data && a.Hora===hora));
-            localStorage.setItem("agendamentos", JSON.stringify(agendamentos));
-            gerarHorarios(); mostrarSepultamentosDia();
-          }
+      div.dataset.tooltip = "Horário passado";
+    } else {
+      div.onclick = () => selecionarHorario(div,hora);
+    }
+  }
+  return div;
+}
         };
       }
     } else {
