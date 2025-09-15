@@ -93,8 +93,8 @@ async function limparAgendamentosExpirados(){
 supabase
   .channel('realtime-agendamentos')
   .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
-    mostrarSepultamentosDia();
     gerarHorarios();
+    mostrarSepultamentosDia();
   })
   .subscribe();
 
