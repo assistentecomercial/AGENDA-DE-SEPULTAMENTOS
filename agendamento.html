@@ -2,11 +2,15 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agendamento - Sistema de Sepultamentos</title>
 <style>
 /* ===== ESTILO GLOBAL ===== */
-body { font-family: Garamond, serif; background:#f0f2f5; margin:0; padding:20px; }
+body { 
+  font-family: Garamond, serif; 
+  background:#f0f2f5; 
+  margin:0; 
+  padding:20px;
+}
 .topo { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:10px; }
 .topo img { width:30px; height:30px; border-radius:50%; }
 .topo span { font-weight:bold; }
@@ -22,9 +26,8 @@ button:hover { background:#218838; transform:scale(1.02); }
 
 /* ===== HORÁRIOS ===== */
 #horarios { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
-.hora { padding:12px; border-radius:12px; cursor:pointer; flex:1 0 80px; text-align:center; transition:0.2s; position:relative; }
-.hora.manha { background:#d4edda; } /* verde claro */
-.hora.tarde { background:#cce5ff; } /* azul claro */
+.hora { padding:12px; border-radius:12px; cursor:pointer; flex:1 0 80px; text-align:center; background:#e9ecef; transition:0.2s; position: relative; }
+.hora:hover { transform:translateY(-2px) scale(1.05); background:#d4edda; }
 .hora.selecionado { background:#28a745; color:white; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
 .hora.ocupado { background:#dc3545; color:white; cursor:not-allowed; }
 .hora[data-tooltip]:hover::after { content: attr(data-tooltip); position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%); background:#333; color:#fff; padding:6px 10px; border-radius:6px; white-space: nowrap; font-size:12px; opacity:0.9; pointer-events:none; }
@@ -48,7 +51,25 @@ button:hover { background:#218838; transform:scale(1.02); }
 .close-modal { position:absolute; top:10px; right:10px; cursor:pointer; font-weight:bold; font-size:18px; }
 
 /* ===== BOTÃO COPIAR ===== */
-#copiarResumo { align-self:flex-end; margin-top:5px; background:#e9ecef; border:1px solid #ccc; padding:6px 10px; border-radius:6px; cursor:pointer; position:relative; }
+#copiarResumo {
+  align-self:flex-end;
+  margin-top:5px;
+  background:#e9ecef;
+  border:1px solid #ccc;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  position:relative;
+}
+#copiarResumo::before, #copiarResumo::after {
+  content:"";
+  position:absolute;
+  border:1px solid #333;
+  width:12px; height:12px;
+  border-radius:2px;
+}
+#copiarResumo::before { top:4px; left:4px; }
+#copiarResumo::after { top:0; left:0; }
 
 /* ===== DIAS CALENDÁRIO ===== */
 .diasCalendario { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
@@ -76,9 +97,9 @@ button.editar { background:#ffc107; color:black; border:none; padding:2px 6px; b
 
 <div class="container">
   <div class="agenda">
-    <h2>SEPULTAMENTO</h2>
+    <h2>Agendamento de Sepultamentos</h2>
 
-    <label for="data">Data do Sepultamento:</label>
+    <label for="data">Data:</label>
     <input type="date" id="data">
 
     <div id="horarios">Escolha uma data para ver os horários disponíveis</div>
@@ -89,34 +110,34 @@ button.editar { background:#ffc107; color:black; border:none; padding:2px 6px; b
         <input type="text" id="contrato">
       </div>
       <div>
-        <label for="gavetas">Qtde. Gavetas (máx. 3):</label>
+        <label for="gavetas">Qtde. Gavetas:</label>
         <input type="number" id="gavetas" min="1" max="3" step="1" placeholder="1-3">
       </div>
     </div>
 
-    <label for="falecido">Nome do Falecido:</label>
+    <label>Nome do Falecido:</label>
     <input type="text" id="falecido">
 
-    <label for="titular">Titular:</label>
+    <label>Titular:</label>
     <input type="text" id="titular">
 
-    <label for="pendencias">Pendências:</label>
+    <label>Pendências:</label>
     <select id="pendencias">
       <option value="NENHUMA">Nenhuma</option>
       <option value="DOCUMENTAÇÃO">Documentação</option>
       <option value="PAGAMENTO">Pagamento</option>
     </select>
 
-    <label for="descPendencia">Descrição da Pendência:</label>
+    <label>Descrição da Pendência:</label>
     <input type="text" id="descPendencia">
 
-    <label for="exumacao">Exumação:</label>
+    <label>Exumação:</label>
     <select id="exumacao">
       <option value="NÃO">Não</option>
       <option value="SIM">Sim</option>
     </select>
 
-    <label for="setor">Setor:</label>
+    <label>Setor:</label>
     <input type="text" id="setor">
 
     <button onclick="confirmarAgendamento()">Confirmar</button>
@@ -139,6 +160,7 @@ button.editar { background:#ffc107; color:black; border:none; padding:2px 6px; b
   </div>
 </div>
 
-<script src="agendamento.js"></script>
+<script src="script.js"></script>
+
 </body>
 </html>
