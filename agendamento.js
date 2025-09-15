@@ -7,6 +7,11 @@ const isAdmin = localStorage.getItem("isAdmin") === "true";
 // Nome do usuário no topo
 document.getElementById("nomeUsuario").textContent = usuarioLogado;
 
+// ===== SUPABASE =====
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ===== VARIÁVEIS =====
 let horarioSelecionado = null;
 const dataInput = document.getElementById("data");
@@ -15,7 +20,7 @@ let agendamentos = [];
 
 // ===== LIMITAR GAVETAS =====
 const gavetasInput = document.getElementById("gavetas");
-gavetasInput.addEventListener("blur", () => {
+gavetasInput.addEventListener("blur", ()=> {
   let valor = parseInt(gavetasInput.value) || 1;
   if (valor > 3) valor = 3;
   if (valor < 1) valor = 1;
@@ -36,11 +41,6 @@ dataInput.addEventListener("input", () => {
   if (dataInput.value > dataInput.max) dataInput.value = dataInput.max;
 });
 
-// ===== SUPABASE =====
-const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
 // ===== FUNÇÕES SUPABASE =====
 async function buscarAgendamentos(data){
   const { data: registros, error } = await supabase
@@ -59,6 +59,14 @@ async function salvarAgendamentoSupabase(ag){
   if(error) console.error(error);
 }
 
+async function atualizarAgendamentoSupabase(id, ag){
+  const { data, error } = await supabase
+    .from('agendamentos')
+    .update(ag)
+    .eq('id', id);
+  if(error) console.error(error);
+}
+
 async function excluirAgendamento(id){
   const { error } = await supabase
     .from('agendamentos')
@@ -66,15 +74,6 @@ async function excluirAgendamento(id){
     .eq('id', id);
   if(error) console.error(error);
 }
-
-// ===== TEMPO REAL =====
-supabase
-  .channel('realtime-agendamentos')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
-    mostrarSepultamentosDia();
-    gerarHorarios();
-  })
-  .subscribe();
 
 // ===== LIMPAR AGENDAMENTOS EXPIRADOS =====
 async function limparAgendamentosExpirados(){
@@ -89,6 +88,15 @@ async function limparAgendamentosExpirados(){
     }
   }
 }
+
+// ===== TEMPO REAL =====
+supabase
+  .channel('realtime-agendamentos')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
+    mostrarSepultamentosDia();
+    gerarHorarios();
+  })
+  .subscribe();
 
 // ===== EVENTOS =====
 dataInput.addEventListener("change", ()=>{
@@ -133,7 +141,6 @@ async function gerarHorarios(){
         div.onclick = () => selecionarHorario(div,hora);  
       }  
     }  
-
     return div;
   }
 
@@ -160,7 +167,7 @@ function atualizarResumo(){
   const contrato = document.getElementById("contrato").value || "-";
   let gavetas = parseInt(document.getElementById("gavetas").value) || "-";
   if(gavetas > 3) gavetas = 3;
-  resumoEl.innerHTML= `
+  resumoEl.innerHTML=`
     <h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
     <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
@@ -250,7 +257,7 @@ async function mostrarSepultamentosDia(){
     titulo.textContent = "SEPULTAMENTO - " + dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
     cardDia.appendChild(titulo);
 
-    const registros = agendamentos.filter(a=>a.data===diaStr);
+    const registros = await buscarAgendamentos(diaStr);
     if(registros.length===0){
       const vazio = document.createElement("p"); vazio.textContent="Nenhum agendamento";
       cardDia.appendChild(vazio);
@@ -265,8 +272,7 @@ async function mostrarSepultamentosDia(){
       if(isAdmin){
         const btn = document.createElement("button"); btn.textContent="Excluir"; btn.classList.add("excluir");
         btn.onclick = e=>{ e.stopPropagation(); if(confirm("Excluir agendamento?")){ 
-          excluirAgendamento(a.id);
-          mostrarSepultamentosDia(); gerarHorarios(); 
+          excluirAgendamento(a.id).then(()=> mostrarSepultamentosDia()); gerarHorarios(); 
         }};
         div.appendChild(btn);
       } else if(a.atendente===usuarioLogado){
@@ -320,6 +326,6 @@ function editarAgendamento(ag){
   atualizarResumo();
 }
 
-// ===== INICIALIZAÇÃO =====
+// Inicializa
 mostrarSepultamentosDia();
 gerarHorarios();
