@@ -1,124 +1,111 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Login - Sistema de Sepultamentos</title>
-<style>
-body {
-  font-family: Garamond, serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  background: #f0f2f5;
-}
-.login-box {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-  width: 350px;
-  text-align: center;
-}
-.login-box h2 {
-  margin-bottom: 20px;
-  color: #28a745;
-}
-.login-box input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 16px;
-}
-.login-box button {
-  width: 100%;
-  padding: 12px;
-  background: #28a745;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.login-box button:hover {
-  background: #218838;
-}
-#btnCalendario {
-  margin-top: 10px;
-  background: #17a2b8;
-}
-#btnCalendario:hover {
-  background: #138496;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Login - Sistema de Sepultamentos</title>
+  <style>
+    body {
+      font-family: Garamond, serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f2f5;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 350px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #28a745;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .login-box button:hover {
+      background: #218838;
+    }
+  </style>
 </head>
 <body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="usuario" placeholder="Usuário" required>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <button onclick="fazerLogin()">Entrar</button>
+  </div>
 
-<div class="login-box">
-  <h2>Login</h2>
-  <input type="text" id="usuario" placeholder="Usuário" required>
-  <input type="password" id="senha" placeholder="Senha" required>
-  <button onclick="fazerLogin()">Entrar</button>
-  <button id="btnCalendario" onclick="abrirCalendario()">Ver Calendário</button>
-</div>
+  <script>
+    // Lista de usuários normais
+    const usuariosPermitidos = [
+      "CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON",
+      "JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA",
+      "PAULO","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"
+    ];
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Lista de administradores
+    const admins = ["LUANA","RAFAEL"];
 
-async function fazerLogin() {
-  const usuario = document.getElementById("usuario").value.trim();
-  const senha = document.getElementById("senha").value.trim();
+    // Senhas
+    const senhaUsuario = "Complexo@";
+    const senhaAdmin = "COMERCIAL@";
 
-  if (!usuario || !senha) {
-    alert("Preencha usuário e senha!");
-    return;
-  }
+    function fazerLogin() {
+      const usuario = document.getElementById("usuario").value.trim().toUpperCase();
+      const senha = document.getElementById("senha").value.trim();
 
-  try {
-    // Consulta a tabela atendentes
-    const { data, error } = await supabase
-      .from('atendentes')
-      .select('nome, senha, is_admin')
-      .eq('nome', usuario)
-      .limit(1)
-      .single();
+      if (!usuario || !senha) {
+        alert("Preencha usuário e senha!");
+        return;
+      }
 
-    if (error || !data) {
-      alert("Usuário não encontrado!");
-      return;
+      // Login admin
+      if (admins.includes(usuario)) {
+        if (senha !== senhaAdmin) {
+          alert("Senha incorreta para administrador!");
+          return;
+        }
+        localStorage.setItem("usuarioLogado", usuario);
+        localStorage.setItem("isAdmin", "true");
+        window.location.href = "agendamento.html";
+        return;
+      }
+
+      // Login usuário normal
+      if (!usuariosPermitidos.includes(usuario)) {
+        alert("Usuário não autorizado!");
+        return;
+      }
+      if (senha !== senhaUsuario) {
+        alert("Senha incorreta!");
+        return;
+      }
+
+      localStorage.setItem("usuarioLogado", usuario);
+      localStorage.setItem("isAdmin", "false");
+      window.location.href = "agendamento.html";
     }
-
-    if (data.senha !== senha) {
-      alert("Senha incorreta!");
-      return;
-    }
-
-    // Salva informações no localStorage
-    localStorage.setItem("usuarioLogado", data.nome);
-    localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
-
-    // Redireciona para agendamento
-    window.location.href = "agendamento.html";
-
-  } catch (err) {
-    console.error(err);
-    alert("Erro ao tentar logar. Veja o console.");
-  }
-}
-
-// Abrir calendário público
-function abrirCalendario(){
-  window.location.href = "calendario.html";
-}
-</script>
-
+  </script>
 </body>
 </html>
