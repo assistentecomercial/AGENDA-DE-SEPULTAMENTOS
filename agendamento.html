@@ -4,111 +4,106 @@
   <meta charset="UTF-8">
   <title>Agendamento - Sistema de Sepultamentos</title>
   <style>
-    /* ===== RESET BÁSICO ===== */
-    * { margin:0; padding:0; box-sizing:border-box; font-family: Garamond, serif; }
-
     body {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      font-family: Garamond, serif;
       background: #f0f2f5;
-      min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    /* ===== CONTAINER PRINCIPAL ===== */
-    .agendamento-box {
+    h2 { color: #28a745; text-align: center; }
+
+    .container {
       background: white;
-      padding: 30px;
+      padding: 20px 30px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      width: 400px;
-      max-width: 90%;
+      max-width: 700px;
+      width: 90%;
+      margin-top: 30px;
     }
 
-    /* ===== TÍTULO ===== */
-    .agendamento-box h2 {
-      color: #28a745;
-      text-align: center;
-      margin-bottom: 20px;
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
     }
 
-    /* ===== INPUTS ===== */
-    .agendamento-box input,
-    .agendamento-box select,
-    .agendamento-box textarea {
+    input, select, textarea {
       width: 100%;
-      padding: 12px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
       border-radius: 8px;
+      border: 1px solid #ccc;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
-    /* ===== BOTÕES ===== */
-    .agendamento-box button {
-      width: 100%;
+    button {
       padding: 12px;
-      margin-top: 10px;
       background: #28a745;
       color: white;
       border: none;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      transition: background 0.3s;
+      width: 100%;
+      margin-top: 10px;
     }
 
-    .agendamento-box button:hover {
-      background: #218838;
-    }
+    button:hover { background: #218838; }
 
-    /* ===== HORÁRIOS ===== */
-    #horarios {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 10px 0;
-    }
+    #horarios { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
 
     .hora {
       padding: 8px 12px;
-      border-radius: 8px;
       border: 1px solid #ccc;
+      border-radius: 6px;
       cursor: pointer;
+      user-select: none;
       text-align: center;
-      min-width: 60px;
-      transition: all 0.2s;
+      min-width: 70px;
     }
 
-    .hora.manha { background: #fff; }
-    .hora.tarde { background: #fff; }
-    .hora.ocupado { background: #f8d7da; cursor: not-allowed; color: #721c24; }
+    .hora.ocupado { background: #f44336; color: white; cursor: not-allowed; }
     .hora.selecionado { background: #28a745; color: white; }
 
-    /* ===== RESUMO ===== */
-    #resumo {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
+    #resumo { margin-top: 15px; background: #e8f5e9; padding: 10px; border-radius: 8px; }
+    
+    .cardDia {
       margin-top: 15px;
-      font-size: 16px;
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    #resumo h3 {
-      color: #28a745;
-      margin-bottom: 10px;
+    .cardAgendamento {
+      padding: 5px 10px;
+      border: 1px solid #ccc;
+      margin: 5px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    /* ===== MODAL ===== */
+    .cardAgendamento button {
+      padding: 4px 8px;
+      font-size: 12px;
+      margin: 0;
+    }
+
+    /* Modal */
     #modalResumo {
-      display: none;
       position: fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
+      top:0; left:0; right:0; bottom:0;
       background: rgba(0,0,0,0.5);
+      display: none;
       justify-content: center;
       align-items: center;
     }
@@ -117,44 +112,55 @@
       background: white;
       padding: 20px;
       border-radius: 12px;
-      max-width: 400px;
       width: 90%;
+      max-width: 400px;
     }
 
-    /* ===== NOME DO USUÁRIO ===== */
-    #nomeUsuario {
-      text-align: right;
-      margin-bottom: 10px;
-      font-weight: bold;
-      color: #28a745;
-    }
+    #modalInfo button { width: 48%; margin-top: 10px; }
   </style>
 </head>
 <body>
-
-  <div class="agendamento-box">
-    <h2>Agendamento de Sepultamento</h2>
-    <div id="nomeUsuario"></div>
-
+  <h2>Agendamento de Sepultamentos</h2>
+  <div class="container">
+    <label for="data">Data</label>
     <input type="date" id="data">
-    <input type="text" id="falecido" placeholder="Nome do falecido">
-    <input type="text" id="titular" placeholder="Titular">
-    <input type="text" id="contrato" placeholder="Nº do contrato">
-    <input type="number" id="gavetas" placeholder="Número de gavetas" min="1" max="3">
-    <input type="text" id="pendencias" placeholder="Pendências">
-    <input type="text" id="descPendencia" placeholder="Descrição da pendência">
-    <input type="text" id="exumacao" placeholder="Exumação">
-    <input type="text" id="setor" placeholder="Setor">
 
+    <label>Horários Disponíveis</label>
     <div id="horarios"></div>
+
+    <label for="falecido">Nome do Falecido</label>
+    <input type="text" id="falecido">
+
+    <label for="titular">Titular</label>
+    <input type="text" id="titular">
+
+    <label for="contrato">Nº do Contrato</label>
+    <input type="text" id="contrato">
+
+    <label for="gavetas">Gavetas (1-3)</label>
+    <input type="number" id="gavetas" min="1" max="3" value="1">
+
+    <label for="pendencias">Pendências</label>
+    <input type="text" id="pendencias">
+
+    <label for="descPendencia">Descrição da Pendência</label>
+    <textarea id="descPendencia"></textarea>
+
+    <label for="exumacao">Exumação</label>
+    <input type="text" id="exumacao">
+
+    <label for="setor">Setor</label>
+    <input type="text" id="setor">
+
     <button onclick="confirmarAgendamento()">Confirmar Agendamento</button>
 
     <div id="resumo"></div>
+    <div id="diasCalendario"></div>
   </div>
 
-  <!-- MODAL -->
-  <div id="modalResumo" onclick="fecharModal()">
-    <div id="modalInfo" onclick="event.stopPropagation()"></div>
+  <div id="modalResumo">
+    <div id="modalInfo"></div>
+    <button onclick="fecharModal()">Fechar</button>
   </div>
 
   <script src="agendamento.js"></script>
