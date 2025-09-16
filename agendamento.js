@@ -1,47 +1,57 @@
 // ===== CONFIGURAÇÃO =====
 const horariosManha = ["09:00","09:20","09:40","10:00","10:20","10:40","11:00"];
 const horariosTarde = ["14:20","14:40","15:00","15:20","15:40","16:00","16:20","16:40"];
-const usuarioLogado = localStorage.getItem("usuarioLogado") || "";
-const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-// Nome do usuário no topo
-document.getElementById("nomeUsuario").textContent = usuarioLogado;
-
-// ===== SUPABASE =====
-const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ===== VARIÁVEIS =====
+let usuarioLogado = null;  // vai guardar objeto do atendente logado
+let isAdmin = false;
 let horarioSelecionado = null;
+
 const dataInput = document.getElementById("data");
 const resumoEl = document.getElementById("resumo");
 let agendamentos = [];
 
-// ===== LIMITAR GAVETAS =====
-const gavetasInput = document.getElementById("gavetas");
-gavetasInput.addEventListener("blur", ()=> {
-  let valor = parseInt(gavetasInput.value) || 1;
-  if (valor > 3) valor = 3;
-  if (valor < 1) valor = 1;
-  gavetasInput.value = valor;
-  atualizarResumo();
-});
+// ===== SUPABASE =====
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01"; // use sua publishable key
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ===== CONFIGURAÇÕES DE DATA =====
-const hoje = new Date();
-const hojeStr = hoje.toISOString().split("T")[0];
-const maxData = new Date();
-maxData.setDate(hoje.getDate() + 5);
-dataInput.min = hojeStr;
-dataInput.max = maxData.toISOString().split("T")[0];
+// ===== LOGIN =====
+async function fazerLogin() {
+  const nome = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value.trim();
 
-dataInput.addEventListener("input", () => {
-  if (dataInput.value < hojeStr) dataInput.value = hojeStr;
-  if (dataInput.value > dataInput.max) dataInput.value = dataInput.max;
-});
+  if (!nome || !senha) {
+    alert("Preencha usuário e senha!");
+    return;
+  }
 
-// ===== FUNÇÕES SUPABASE =====
+  const { data, error } = await supabase
+    .from("atendentes")
+    .select("*")
+    .eq("nome", nome)
+    .eq("senha", senha)
+    .single();
+
+  if (error || !data) {
+    alert("Usuário ou senha incorretos!");
+    return;
+  }
+
+  usuarioLogado = data.nome;
+  isAdmin = data.papel === "admin";
+
+  localStorage.setItem("usuarioLogado", usuarioLogado);
+  localStorage.setItem("isAdmin", isAdmin);
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("agendaBox").style.display = "block";
+
+  document.getElementById("nomeUsuario").textContent = usuarioLogado;
+
+  gerarHorarios();
+}
+
+// ===== BUSCAR AGENDAMENTOS =====
 async function buscarAgendamentos(data){
   const { data: registros, error } = await supabase
     .from('agendamentos')
@@ -52,6 +62,7 @@ async function buscarAgendamentos(data){
   return registros || [];
 }
 
+// ===== SALVAR AGENDAMENTO =====
 async function salvarAgendamentoSupabase(ag){
   const { data, error } = await supabase
     .from('agendamentos')
@@ -59,14 +70,7 @@ async function salvarAgendamentoSupabase(ag){
   if(error) console.error(error);
 }
 
-async function atualizarAgendamentoSupabase(id, ag){
-  const { data, error } = await supabase
-    .from('agendamentos')
-    .update(ag)
-    .eq('id', id);
-  if(error) console.error(error);
-}
-
+// ===== EXCLUIR AGENDAMENTO =====
 async function excluirAgendamento(id){
   const { error } = await supabase
     .from('agendamentos')
@@ -74,35 +78,6 @@ async function excluirAgendamento(id){
     .eq('id', id);
   if(error) console.error(error);
 }
-
-// ===== LIMPAR AGENDAMENTOS EXPIRADOS =====
-async function limparAgendamentosExpirados(){
-  const agora = new Date();
-  for(const ag of agendamentos){
-    const [h,m] = ag.hora.split(":").map(Number);
-    const dt = new Date(ag.data);
-    dt.setHours(h,m,0,0);
-    dt.setDate(dt.getDate()+1);
-    if(dt <= agora){
-      await excluirAgendamento(ag.id);
-    }
-  }
-}
-
-// ===== TEMPO REAL =====
-supabase
-  .channel('realtime-agendamentos')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
-    gerarHorarios();
-    mostrarSepultamentosDia();
-  })
-  .subscribe();
-
-// ===== EVENTOS =====
-dataInput.addEventListener("change", ()=>{
-  gerarHorarios();
-  mostrarSepultamentosDia();
-});
 
 // ===== GERAR HORÁRIOS =====
 async function gerarHorarios(){
@@ -122,19 +97,20 @@ async function gerarHorarios(){
     const regOcupado = agendamentos.find(r=>r.hora===hora);  
     if(regOcupado){  
       div.classList.add("ocupado");  
-      div.dataset.tooltip = `${regOcupado.falecido} (${regOcupado.pendencias}) - ${regOcupado.atendente}`;  
+      div.dataset.tooltip = `${regOcupado.falecido || "-"} (${regOcupado.pendencias || "-"}) - ${regOcupado.atendente}`;  
       if(isAdmin){  
         div.onclick = async () => {  
           if(confirm(`Excluir horário ${hora}?`)){  
             await excluirAgendamento(regOcupado.id);
-            gerarHorarios(); 
-            mostrarSepultamentosDia();  
+            gerarHorarios();  
           }  
         };  
       }  
     } else {  
       const dtHorario = new Date(`${data}T${hora}:00-03:00`);
-      if(data === hojeStr && dtHorario < new Date()){   
+      const hoje = new Date();
+      const hojeStr = hoje.toISOString().split("T")[0];
+      if(data === hojeStr && dtHorario < hoje){   
         div.classList.add("ocupado");  
         div.dataset.tooltip = "Horário passado";  
       } else {  
@@ -164,76 +140,41 @@ function selecionarHorario(div,hora){
 
 // ===== ATUALIZAR RESUMO =====
 function atualizarResumo(){
-  const contrato = document.getElementById("contrato").value || "-";
-  let gavetas = parseInt(document.getElementById("gavetas").value) || "-";
-  if(gavetas > 3) gavetas = 3;
-  resumoEl.innerHTML=`
+  resumoEl.innerHTML = `
     <h3>Resumo do Agendamento</h3>
     <p><b>Data:</b> ${dataInput.value||"-"}</p>
     <p><b>Hora:</b> ${horarioSelecionado||"-"}</p>
-    <p><b>Falecido:</b> ${document.getElementById("falecido").value||"-"}</p>
-    <p><b>Titular:</b> ${document.getElementById("titular").value||"-"}</p>
-    <p><b>Nº do contrato:</b> ${contrato} - "${gavetas} ${gavetas == 1 ? 'gaveta' : 'gavetas'}"</p>
     <p><b>Atendente:</b> ${usuarioLogado||"-"}</p>
-    <button onclick="enviarWhatsApp()">Enviar para WhatsApp</button>
   `;
-}
-
-// ===== COPIAR RESUMO =====
-function copiarResumo(){
-  const textoResumo = resumoEl.innerText || document.getElementById("modalInfo").innerText;
-  navigator.clipboard.writeText(textoResumo).then(()=>{
-    alert("Resumo copiado para a área de transferência!");
-  }).catch(()=>{ alert("Erro ao copiar!"); });
-}
-
-// ===== ENVIAR PARA WHATSAPP =====
-function enviarWhatsApp() {
-  const textoResumo = resumoEl.innerText || document.getElementById("modalInfo").innerText;
-  const mensagem = encodeURIComponent(textoResumo);
-  const url = `https://api.whatsapp.com/send?text=${mensagem}`;
-  window.open(url, "_blank");
 }
 
 // ===== CONFIRMAR AGENDAMENTO =====
 async function confirmarAgendamento(){
   const data = dataInput.value;
-  const falecido = document.getElementById("falecido").value.trim();
-  const contrato = document.getElementById("contrato").value;
-  let gavetas = parseInt(document.getElementById("gavetas").value) || 1;
-  if(gavetas > 3) gavetas = 3;
-  const titular = document.getElementById("titular").value;
-  const pendencias = document.getElementById("pendencias").value;
-  const descPendencia = document.getElementById("descPendencia").value;
-  const exumacao = document.getElementById("exumacao").value;
-  const setor = document.getElementById("setor").value;
-
-  if(!data || !horarioSelecionado || !falecido){
-    alert("Preencha todos os campos e selecione um horário!");
-    return;
-  }
-
-  if(agendamentos.some(a=>a.falecido.toLowerCase() === falecido.toLowerCase())){
-    alert("Este falecido já está agendado!");
+  if(!data || !horarioSelecionado){
+    alert("Selecione data e horário!");
     return;
   }
 
   const ag = {
     data,
     hora: horarioSelecionado,
-    falecido,
-    contrato,
-    gavetas,
-    titular,
-    pendencias,
-    descPendencia,
-    exumacao,
-    setor,
     atendente: usuarioLogado
   };
 
   await salvarAgendamentoSupabase(ag);
-  gerarHorarios(); 
-  mostrarSepultamentosDia();  
+  alert(`✅ Agendamento confirmado: ${horarioSelecionado}`);
+  gerarHorarios();
   atualizarResumo();
 }
+
+// ===== TEMPO REAL =====
+supabase
+  .channel('realtime-agendamentos')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'agendamentos' }, payload => {
+    gerarHorarios();
+  })
+  .subscribe();
+
+// ===== EVENTOS =====
+dataInput.addEventListener("change", gerarHorarios);
