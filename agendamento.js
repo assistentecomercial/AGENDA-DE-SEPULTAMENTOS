@@ -184,9 +184,7 @@ function copiarResumo(){
   const textoResumo = resumoEl.innerText || document.getElementById("modalInfo").innerText;
   navigator.clipboard.writeText(textoResumo).then(()=>{
     alert("Resumo copiado para a área de transferência!");
-  }).catch(()=>{
-    alert("Erro ao copiar!");
-  });
+  }).catch(()=>{ alert("Erro ao copiar!"); });
 }
 
 // ===== ENVIAR PARA WHATSAPP =====
@@ -236,96 +234,6 @@ async function confirmarAgendamento(){
 
   await salvarAgendamentoSupabase(ag);
   gerarHorarios(); 
-  mostrarSepultamentosDia(); 
+  mostrarSepultamentosDia();  
   atualizarResumo();
 }
-
-// ===== MOSTRAR SEPULTAMENTOS =====
-async function mostrarSepultamentosDia(){
-  await limparAgendamentosExpirados();
-  const container = document.getElementById("diasCalendario");
-  container.innerHTML="";
-
-  for(let i=0;i<5;i++){
-    const dia = new Date();
-    dia.setDate(hoje.getDate()+i);
-    const diaStr = dia.toISOString().split("T")[0];
-    const cardDia = document.createElement("div");
-    cardDia.classList.add("cardDia");
-
-    const titulo = document.createElement("h4");
-    titulo.textContent = "SEPULTAMENTO - " + dia.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit"});
-    cardDia.appendChild(titulo);
-
-    const registros = await buscarAgendamentos(diaStr);
-    if(registros.length===0){
-      const vazio = document.createElement("p"); vazio.textContent="Nenhum agendamento";
-      cardDia.appendChild(vazio);
-    }
-
-    registros.forEach(a=>{
-      const div = document.createElement("div");
-      div.classList.add("cardAgendamento");
-      div.textContent=`${a.hora} - ${a.falecido}`;
-      div.onclick = ()=> abrirModal(a);
-
-      if(isAdmin){
-        const btn = document.createElement("button"); btn.textContent="Excluir"; btn.classList.add("excluir");
-        btn.onclick = e=>{ e.stopPropagation(); if(confirm("Excluir agendamento?")){ 
-          excluirAgendamento(a.id).then(()=> mostrarSepultamentosDia()); gerarHorarios(); 
-        }};
-        div.appendChild(btn);
-      } else if(a.atendente===usuarioLogado){
-        const btn = document.createElement("button"); btn.textContent="Editar"; btn.classList.add("editar");
-        btn.onclick = e=>{ e.stopPropagation(); editarAgendamento(a); };
-        div.appendChild(btn);
-      }
-
-      cardDia.appendChild(div);
-    });
-
-    container.appendChild(cardDia);
-  }
-}
-
-// ===== MODAL =====
-function abrirModal(ag){
-  document.getElementById("modalInfo").innerHTML=`
-    <p><b>Data:</b> ${ag.data}</p>
-    <p><b>Hora:</b> ${ag.hora}</p>
-    <p><b>Falecido:</b> ${ag.falecido}</p>
-    <p><b>Titular:</b> ${ag.titular}</p>
-    <p><b>Contrato:</b> ${ag.contrato} (${ag.gavetas} ${ag.gavetas==1?"gaveta":"gavetas"})</p>
-    <p><b>Pendências:</b> ${ag.pendencias} - ${ag.descPendencia}</p>
-    <p><b>Exumação:</b> ${ag.exumacao}</p>
-    <p><b>Setor:</b> ${ag.setor}</p>
-    <p><b>Atendente:</b> ${ag.atendente}</p>
-    <button onclick="copiarResumo()">Copiar Resumo</button>
-    <button onclick="enviarWhatsApp()">Enviar para WhatsApp</button>
-  `;
-  document.getElementById("modalResumo").style.display="flex";
-}
-
-function fecharModal(){
-  document.getElementById("modalResumo").style.display="none";
-}
-
-// ===== EDITAR AGENDAMENTO =====
-function editarAgendamento(ag){
-  dataInput.value = ag.data;
-  horarioSelecionado = ag.hora;
-  document.getElementById("falecido").value=ag.falecido;
-  document.getElementById("contrato").value=ag.contrato;
-  document.getElementById("gavetas").value=ag.gavetas;
-  document.getElementById("titular").value=ag.titular;
-  document.getElementById("pendencias").value=ag.pendencias;
-  document.getElementById("descPendencia").value=ag.descPendencia;
-  document.getElementById("exumacao").value=ag.exumacao;
-  document.getElementById("setor").value=ag.setor;
-  gerarHorarios();
-  atualizarResumo();
-}
-
-// Inicializa
-mostrarSepultamentosDia();
-gerarHorarios();
