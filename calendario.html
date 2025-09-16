@@ -70,16 +70,40 @@ body {
 
 <div class="container" id="diasCalendario"></div>
 
+<!-- Importa Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// === CONFIG SUPABASE ===
+const SUPABASE_URL = "https://SEU-PROJETO.supabase.co"; // coloque o seu
+const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON";             // coloque a sua
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // ===== FUNÇÃO PARA ATUALIZAR CALENDÁRIO =====
-function atualizarCalendario() {
+async function atualizarCalendario() {
   const container = document.getElementById("diasCalendario");
   container.innerHTML = "";
 
-  // Puxa agendamentos do localStorage (mesmos do agendamento.js)
-  const agendamentos = JSON.parse(localStorage.getItem("agendamentos") || "[]");
-
   const hoje = new Date();
+  const fim = new Date();
+  fim.setDate(hoje.getDate() + 4); // próximos 5 dias
+
+  // Converte para formato YYYY-MM-DD
+  const inicioStr = hoje.toISOString().split("T")[0];
+  const fimStr = fim.toISOString().split("T")[0];
+
+  // Busca agendamentos no Supabase
+  const { data: agendamentos, error } = await supabase
+    .from("agendamentos")
+    .select("*")
+    .gte("data", inicioStr)
+    .lte("data", fimStr)
+    .order("data", { ascending: true })
+    .order("hora", { ascending: true });
+
+  if (error) {
+    console.error("Erro ao buscar agendamentos:", error);
+    return;
+  }
 
   for (let i = 0; i < 5; i++) {
     const dia = new Date();
@@ -93,7 +117,7 @@ function atualizarCalendario() {
     titulo.textContent = dia.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
     cardDia.appendChild(titulo);
 
-    const registros = agendamentos.filter(a => a.Data === diaStr);
+    const registros = agendamentos.filter(a => a.data === diaStr);
 
     if (registros.length === 0) {
       const vazio = document.createElement("p");
@@ -106,15 +130,15 @@ function atualizarCalendario() {
       div.classList.add("cardAgendamento");
 
       // Alerta se estiver dentro de 1h
-      const [h, m] = a.Hora.split(":").map(Number);
-      const dataHora = new Date(a.Data);
+      const [h, m] = a.hora.split(":").map(Number);
+      const dataHora = new Date(a.data);
       dataHora.setHours(h, m, 0, 0);
       const agora = new Date();
       if ((dataHora - agora) <= 3600000 && (dataHora - agora) >= 0) {
         div.classList.add("alerta");
       }
 
-      div.innerHTML = `<span>${a.Hora} - ${a.Falecido}</span><span>${a.Setor || "-"}</span>`;
+      div.innerHTML = `<span>${a.hora} - ${a.falecido}</span><span>${a.setor || "-"}</span>`;
 
       cardDia.appendChild(div);
     });
