@@ -67,9 +67,9 @@ body {
 </div>
 
 <!-- Importa Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.32.1/dist/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co"; // seu projeto
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co"; // sua URL
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -82,38 +82,33 @@ async function fazerLogin() {
     return;
   }
 
-  // Busca atendente no Supabase
-  const { data: atendente, error } = await supabase
+  // Consulta Supabase
+  const { data, error } = await supabase
     .from("atendentes")
     .select("*")
     .eq("nome", usuario)
+    .limit(1)
     .single();
 
-  if(error) {
-    console.error(error);
-    alert("Erro ao acessar o banco de dados!");
-    return;
-  }
-
-  if(!atendente) {
+  if (error || !data) {
     alert("Usuário não encontrado!");
     return;
   }
 
-  if(atendente.senha !== senha) {
+  if (data.senha !== senha) {
     alert("Senha incorreta!");
     return;
   }
 
-  // Salva info no localStorage
-  localStorage.setItem("usuarioLogado", atendente.nome);
-  localStorage.setItem("isAdmin", atendente.role === "admin" ? "true" : "false");
+  // Salva localStorage
+  localStorage.setItem("usuarioLogado", data.nome);
+  localStorage.setItem("isAdmin", data.is_admin);
 
-  // Redireciona para o agendamento
+  // Redireciona
   window.location.href = "agendamento.html";
 }
 
-// Função para abrir a página pública do calendário
+// Abrir calendário público
 function abrirCalendario(){
   window.location.href = "calendario.html";
 }
