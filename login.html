@@ -67,48 +67,49 @@ body {
 </div>
 
 <!-- Importa Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.32.0/dist/supabase.min.js"></script>
 <script>
-const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co"; // sua URL
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwZ3ZmeWludXBqYm9vdnZvYmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc5NTk2NjEsImV4cCI6MjA3MzUzNTY2MX0.v39LBa0GXNDcN1EhrnaKIDt6F9DKMff-onRpFUfxRjg";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 🔑 Configuração do Supabase
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
+const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01"; // publishable key
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function fazerLogin() {
+async function fazerLogin(){
   const usuario = document.getElementById("usuario").value.trim().toUpperCase();
   const senha = document.getElementById("senha").value.trim();
 
-  if (!usuario || !senha) {
+  if(!usuario || !senha){
     alert("Preencha usuário e senha!");
     return;
   }
 
-  // Consulta Supabase
-  const { data, error } = await supabase
-    .from("atendentes")
-    .select("*")
-    .eq("nome", usuario)
-    .limit(1)
-    .single();
+  try {
+    // Busca usuário na tabela atendentes
+    const { data, error } = await supabase
+      .from("atendentes")
+      .select("*")
+      .eq("nome", usuario)
+      .eq("senha", senha)
+      .single();
 
-  if (error || !data) {
-    alert("Usuário não encontrado!");
-    return;
+    if(error || !data){
+      alert("Usuário ou senha incorretos!");
+      console.error("Erro Supabase:", error);
+      return;
+    }
+
+    // Login bem-sucedido
+    localStorage.setItem("usuarioLogado", data.nome);
+    localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
+
+    window.location.href = "agendamento.html";
+  } catch (err) {
+    console.error("Erro inesperado:", err);
+    alert("Erro no login, veja o console.");
   }
-
-  if (data.senha !== senha) {
-    alert("Senha incorreta!");
-    return;
-  }
-
-  // Salva localStorage
-  localStorage.setItem("usuarioLogado", data.nome);
-  localStorage.setItem("isAdmin", data.is_admin);
-
-  // Redireciona
-  window.location.href = "agendamento.html";
 }
 
-// Abrir calendário público
+// Função para abrir calendário público
 function abrirCalendario(){
   window.location.href = "calendario.html";
 }
