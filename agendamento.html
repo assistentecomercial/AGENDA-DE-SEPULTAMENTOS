@@ -1,60 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Agendamento - Sistema de Sepultamentos</title>
-<style>
-body {
-  font-family: Garamond, serif;
-  margin: 20px;
-  background: #f0f2f5;
-}
-#horarios .hora {
-  display: inline-block;
-  padding: 8px 12px;
-  margin: 4px;
-  border-radius: 6px;
-  cursor: pointer;
-  background: white;
-  border: 1px solid #ccc;
-}
-#horarios .ocupado { background: #f8d7da; cursor: not-allowed; }
-#horarios .selecionado { background: #28a745; color: white; }
-#horarios .manha { background: #fff; }
-#horarios .tarde { background: #fff; }
-</style>
+  <meta charset="UTF-8">
+  <title>Agendamento - Sistema de Sepultamentos</title>
+  <style>
+    /* ===== RESET BÁSICO ===== */
+    * { margin:0; padding:0; box-sizing:border-box; font-family: Garamond, serif; }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      background: #f0f2f5;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* ===== CONTAINER PRINCIPAL ===== */
+    .agendamento-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 400px;
+      max-width: 90%;
+    }
+
+    /* ===== TÍTULO ===== */
+    .agendamento-box h2 {
+      color: #28a745;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* ===== INPUTS ===== */
+    .agendamento-box input,
+    .agendamento-box select,
+    .agendamento-box textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    /* ===== BOTÕES ===== */
+    .agendamento-box button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .agendamento-box button:hover {
+      background: #218838;
+    }
+
+    /* ===== HORÁRIOS ===== */
+    #horarios {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .hora {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      text-align: center;
+      min-width: 60px;
+      transition: all 0.2s;
+    }
+
+    .hora.manha { background: #fff; }
+    .hora.tarde { background: #fff; }
+    .hora.ocupado { background: #f8d7da; cursor: not-allowed; color: #721c24; }
+    .hora.selecionado { background: #28a745; color: white; }
+
+    /* ===== RESUMO ===== */
+    #resumo {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 16px;
+    }
+
+    #resumo h3 {
+      color: #28a745;
+      margin-bottom: 10px;
+    }
+
+    /* ===== MODAL ===== */
+    #modalResumo {
+      display: none;
+      position: fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    #modalInfo {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    /* ===== NOME DO USUÁRIO ===== */
+    #nomeUsuario {
+      text-align: right;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #28a745;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Bem-vindo, <span id="nomeUsuario">Usuário</span></h2>
+  <div class="agendamento-box">
+    <h2>Agendamento de Sepultamento</h2>
+    <div id="nomeUsuario"></div>
 
-<label>Data:</label>
-<input type="date" id="data"><br><br>
+    <input type="date" id="data">
+    <input type="text" id="falecido" placeholder="Nome do falecido">
+    <input type="text" id="titular" placeholder="Titular">
+    <input type="text" id="contrato" placeholder="Nº do contrato">
+    <input type="number" id="gavetas" placeholder="Número de gavetas" min="1" max="3">
+    <input type="text" id="pendencias" placeholder="Pendências">
+    <input type="text" id="descPendencia" placeholder="Descrição da pendência">
+    <input type="text" id="exumacao" placeholder="Exumação">
+    <input type="text" id="setor" placeholder="Setor">
 
-<div id="horarios"></div><br>
+    <div id="horarios"></div>
+    <button onclick="confirmarAgendamento()">Confirmar Agendamento</button>
 
-<label>Falecido:</label>
-<input type="text" id="falecido"><br>
-<label>Titular:</label>
-<input type="text" id="titular"><br>
-<label>Contrato:</label>
-<input type="text" id="contrato"><br>
-<label>Gavetas:</label>
-<input type="number" id="gavetas" min="1" max="3" value="1"><br>
-<label>Pendências:</label>
-<input type="text" id="pendencias"><br>
-<label>Descrição da Pendência:</label>
-<input type="text" id="descPendencia"><br>
-<label>Exumação:</label>
-<input type="text" id="exumacao"><br>
-<label>Setor:</label>
-<input type="text" id="setor"><br><br>
+    <div id="resumo"></div>
+  </div>
 
-<button onclick="confirmarAgendamento()">Confirmar Agendamento</button>
-<button onclick="copiarResumo()">Copiar Resumo</button>
+  <!-- MODAL -->
+  <div id="modalResumo" onclick="fecharModal()">
+    <div id="modalInfo" onclick="event.stopPropagation()"></div>
+  </div>
 
-<div id="resumo"></div>
-
-<script src="agendamento.js"></script>
+  <script src="agendamento.js"></script>
 </body>
 </html>
