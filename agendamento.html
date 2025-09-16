@@ -6,88 +6,55 @@
 <style>
 body {
   font-family: Garamond, serif;
+  margin: 20px;
   background: #f0f2f5;
-  margin:0;
-  padding:0;
 }
-.container {
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
+#horarios .hora {
+  display: inline-block;
+  padding: 8px 12px;
+  margin: 4px;
+  border-radius: 6px;
+  cursor: pointer;
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  border: 1px solid #ccc;
 }
-h1 { color: #28a745; text-align:center; }
-label { display:block; margin-top:10px; }
-input, select, textarea {
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-button {
-  margin-top:15px;
-  padding:12px;
-  border:none;
-  border-radius:8px;
-  background:#28a745;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-}
-button:hover { background:#218838; }
-.horarios { display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
-.hora { padding:8px; border:1px solid #28a745; border-radius:6px; cursor:pointer; min-width:60px; text-align:center; }
-.hora.ocupado { background:#f8d7da; border-color:#f5c6cb; cursor:not-allowed; }
-.hora.selecionado { background:#28a745; color:white; }
-#resumo { margin-top:20px; padding:15px; background:#e9ecef; border-radius:8px; }
-#nomeUsuario { float:right; font-weight:bold; color:#28a745; }
+#horarios .ocupado { background: #f8d7da; cursor: not-allowed; }
+#horarios .selecionado { background: #28a745; color: white; }
+#horarios .manha { background: #fff; }
+#horarios .tarde { background: #fff; }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Agendamento de Sepultamentos</h1>
-  <span>Atendente: <span id="nomeUsuario"></span></span>
+<h2>Bem-vindo, <span id="nomeUsuario">Usuário</span></h2>
 
-  <label for="data">Data:</label>
-  <input type="date" id="data">
+<label>Data:</label>
+<input type="date" id="data"><br><br>
 
-  <div id="horarios" class="horarios"></div>
+<div id="horarios"></div><br>
 
-  <label for="falecido">Falecido:</label>
-  <input type="text" id="falecido">
+<label>Falecido:</label>
+<input type="text" id="falecido"><br>
+<label>Titular:</label>
+<input type="text" id="titular"><br>
+<label>Contrato:</label>
+<input type="text" id="contrato"><br>
+<label>Gavetas:</label>
+<input type="number" id="gavetas" min="1" max="3" value="1"><br>
+<label>Pendências:</label>
+<input type="text" id="pendencias"><br>
+<label>Descrição da Pendência:</label>
+<input type="text" id="descPendencia"><br>
+<label>Exumação:</label>
+<input type="text" id="exumacao"><br>
+<label>Setor:</label>
+<input type="text" id="setor"><br><br>
 
-  <label for="titular">Titular:</label>
-  <input type="text" id="titular">
+<button onclick="confirmarAgendamento()">Confirmar Agendamento</button>
+<button onclick="copiarResumo()">Copiar Resumo</button>
 
-  <label for="contrato">Nº do Contrato:</label>
-  <input type="text" id="contrato">
+<div id="resumo"></div>
 
-  <label for="gavetas">Número de Gavetas:</label>
-  <input type="number" id="gavetas" min="1" max="3" value="1">
-
-  <label for="pendencias">Pendências:</label>
-  <input type="text" id="pendencias">
-
-  <label for="descPendencia">Descrição da Pendência:</label>
-  <textarea id="descPendencia" rows="2"></textarea>
-
-  <label for="exumacao">Exumação:</label>
-  <input type="text" id="exumacao">
-
-  <label for="setor">Setor:</label>
-  <input type="text" id="setor">
-
-  <button onclick="confirmarAgendamento()">Confirmar Agendamento</button>
-
-  <div id="resumo"></div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.32.0/dist/supabase.min.js"></script>
 <script src="agendamento.js"></script>
-
 </body>
 </html>
