@@ -66,41 +66,55 @@ body {
   <button id="btnCalendario" onclick="abrirCalendario()">Ver Calendário</button>
 </div>
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
-const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01"; // publishable key
+const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01";
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 async function fazerLogin() {
-    const nome = document.getElementById("usuario").value.trim();
-    const senha = document.getElementById("senha").value.trim();
+  const usuario = document.getElementById("usuario").value.trim();
+  const senha = document.getElementById("senha").value.trim();
 
-    if (!nome || !senha) { alert("Preencha usuário e senha!"); return; }
+  if (!usuario || !senha) {
+    alert("Preencha usuário e senha!");
+    return;
+  }
 
+  try {
+    // Consulta a tabela atendentes
     const { data, error } = await supabase
-        .from("atendentes")
-        .select("*")
-        .eq("nome", nome)
-        .eq("senha", senha)
-        .single();
+      .from('atendentes')
+      .select('nome, senha, is_admin')
+      .eq('nome', usuario)
+      .limit(1)
+      .single();
 
-    if (error) {
-        console.error(error);
-        alert("Erro ao consultar Supabase.");
-        return;
+    if (error || !data) {
+      alert("Usuário não encontrado!");
+      return;
     }
 
-    if (!data) { 
-        alert("Usuário ou senha incorretos!"); 
-        return; 
+    if (data.senha !== senha) {
+      alert("Senha incorreta!");
+      return;
     }
 
+    // Salva informações no localStorage
     localStorage.setItem("usuarioLogado", data.nome);
     localStorage.setItem("isAdmin", data.is_admin ? "true" : "false");
+
+    // Redireciona para agendamento
     window.location.href = "agendamento.html";
+
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao tentar logar. Veja o console.");
+  }
 }
 
+// Abrir calendário público
 function abrirCalendario(){
   window.location.href = "calendario.html";
 }
