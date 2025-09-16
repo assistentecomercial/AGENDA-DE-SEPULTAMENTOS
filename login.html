@@ -66,55 +66,56 @@ body {
   <button id="btnCalendario" onclick="abrirCalendario()">Ver Calendário</button>
 </div>
 
+<!-- Supabase JS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const usuariosPermitidos = [
-  "CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON",
-  "JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA",
-  "PAULO","RAFAEL","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"
-];
+const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co"; 
+const SUPABASE_KEY = "SUA_CHAVE_ANON"; // substitua pela sua chave anon
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const admins = ["LUANA","RAFAEL"];
-
-function fazerLogin(){
-  const usuario = document.getElementById("usuario").value.trim().toUpperCase();
+async function fazerLogin() {
+  const usuario = document.getElementById("usuario").value.trim();
   const senha = document.getElementById("senha").value.trim();
 
-  if(!usuario || !senha){
+  if (!usuario || !senha) {
     alert("Preencha usuário e senha!");
     return;
   }
 
-  // Verifica se é admin
-  if(admins.includes(usuario)){
-    if(senha !== "COMERCIAL@"){
-      alert("Senha de administrador incorreta!");
+  try {
+    // login com Supabase Auth
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: usuario + "@empresa.com", // cada usuário deve ter um email cadastrado no Supabase
+      password: senha
+    });
+
+    if (error) {
+      alert("Erro de login: " + error.message);
       return;
     }
+
+    if (!data.user) {
+      alert("Usuário não encontrado!");
+      return;
+    }
+
+    // pega role do metadata
+    const role = data.user.user_metadata.role || "user";
+
+    // salva no localStorage
     localStorage.setItem("usuarioLogado", usuario);
-    localStorage.setItem("senhaLogada", senha);
-    localStorage.setItem("isAdmin","true");
-    window.location.href="agendamento.html";
-    return;
-  }
+    localStorage.setItem("isAdmin", role === "admin");
 
-  // Verifica se é atendente
-  if(!usuariosPermitidos.includes(usuario)){
-    alert("Usuário não autorizado!");
-    return;
-  }
-  if(senha !== "COMPLEXO@"){
-    alert("Senha incorreta!");
-    return;
-  }
+    // redireciona para agendamento
+    window.location.href = "agendamento.html";
 
-  // Salva no localStorage
-  localStorage.setItem("usuarioLogado", usuario);
-  localStorage.setItem("senhaLogada", senha);
-  localStorage.setItem("isAdmin","false");
-  window.location.href="agendamento.html";
+  } catch (err) {
+    console.error(err);
+    alert("Erro inesperado, veja console.");
+  }
 }
 
-// Função para abrir a página pública do calendário
+// página pública do calendário
 function abrirCalendario(){
   window.location.href = "calendario.html";
 }
