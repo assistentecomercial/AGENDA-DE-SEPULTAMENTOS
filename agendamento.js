@@ -1,4 +1,4 @@
-// ===== CONFIGURAÇÃO =====
+// ===== CONFIGURAÇÃO SUPABASE =====
 const SUPABASE_URL = "https://upgvfyinupjboovvobdm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YKLtx78hj_0DcAcZIsI9kg_CDdXQD01";
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -172,5 +172,5 @@ function mostrarSepultamentosDia(){
   }
 }
 
-// ===== OPÇÃO: atualizar calendário a cada minuto =====
+// ===== Atualiza o calendário a cada minuto =====
 setInterval(mostrarSepultamentosDia, 60000);
