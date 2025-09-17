@@ -135,9 +135,14 @@ async function confirmarAgendamento(){
   }]);
 
   if(error) return alert("Erro ao agendar: "+error.message);
+
+  alert("Agendamento confirmado!");
   carregarAgendamentos();
   atualizarResumo();
 }
+
+// ===== BOTÃO CONFIRMAR =====
+document.getElementById("btnConfirmar")?.addEventListener("click", confirmarAgendamento);
 
 // ===== MOSTRAR SEPULTAMENTOS =====
 function mostrarSepultamentosDia(){
