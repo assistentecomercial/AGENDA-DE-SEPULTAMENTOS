@@ -1,156 +1,72 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Calendário de Sepultamentos</title>
-<style>
-body {
-  font-family: Garamond, serif;
-  background:#f0f2f5;
-  margin:0;
-  padding:20px;
-}
-.topo {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:20px;
-}
-.topo h2 { color:#28a745; }
-.topo button {
-  background:#28a745;
-  color:white;
-  border:none;
-  padding:10px 15px;
-  border-radius:8px;
-  cursor:pointer;
-  transition:0.2s;
-}
-.topo button:hover { background:#218838; }
+  <meta charset="UTF-8">
+  <title>Agendamento</title>
+  <style>
+    /* Reset */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* CONTAINER PRINCIPAL */
-.container {
-  display:flex;
-  gap:20px;
-  flex-wrap:wrap;
-}
-
-/* QUADRO DE SEPULTAMENTOS */
-.cardDia {
-  background:#f8f9fa;
-  border:1px solid #ccc;
-  border-radius:12px;
-  padding:10px;
-  flex:1 1 180px;
-}
-.cardDia h4 { text-align:center; color:#28a745; margin-top:0; }
-.cardAgendamento {
-  background:#e9ecef;
-  padding:6px;
-  margin:4px 0;
-  border-radius:8px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  transition:0.2s;
-}
-.cardAgendamento:hover { transform:scale(1.02); }
-.cardAgendamento.alerta { background:#dc3545; color:white; font-weight:bold; }
-
-/* RESPONSIVO */
-@media(max-width:900px){ .container{flex-direction:column;} }
-</style>
-</head>
-<body>
-
-<div class="topo">
-  <h2>Calendário de Sepultamentos</h2>
-  <button onclick="window.location.href='login.html'">Voltar ao Login</button>
-</div>
-
-<div class="container" id="diasCalendario"></div>
-
-<!-- Importa Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-// === CONFIG SUPABASE ===
-const SUPABASE_URL = "https://SEU-PROJETO.supabase.co"; // coloque o seu
-const SUPABASE_ANON_KEY = "SUA-CHAVE-ANON";             // coloque a sua
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-// ===== FUNÇÃO PARA ATUALIZAR CALENDÁRIO =====
-async function atualizarCalendario() {
-  const container = document.getElementById("diasCalendario");
-  container.innerHTML = "";
-
-  const hoje = new Date();
-  const fim = new Date();
-  fim.setDate(hoje.getDate() + 4); // próximos 5 dias
-
-  // Converte para formato YYYY-MM-DD
-  const inicioStr = hoje.toISOString().split("T")[0];
-  const fimStr = fim.toISOString().split("T")[0];
-
-  // Busca agendamentos no Supabase
-  const { data: agendamentos, error } = await supabase
-    .from("agendamentos")
-    .select("*")
-    .gte("data", inicioStr)
-    .lte("data", fimStr)
-    .order("data", { ascending: true })
-    .order("hora", { ascending: true });
-
-  if (error) {
-    console.error("Erro ao buscar agendamentos:", error);
-    return;
-  }
-
-  for (let i = 0; i < 5; i++) {
-    const dia = new Date();
-    dia.setDate(hoje.getDate() + i);
-    const diaStr = dia.toISOString().split("T")[0];
-
-    const cardDia = document.createElement("div");
-    cardDia.classList.add("cardDia");
-
-    const titulo = document.createElement("h4");
-    titulo.textContent = dia.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" });
-    cardDia.appendChild(titulo);
-
-    const registros = agendamentos.filter(a => a.data === diaStr);
-
-    if (registros.length === 0) {
-      const vazio = document.createElement("p");
-      vazio.textContent = "Nenhum sepultamento";
-      cardDia.appendChild(vazio);
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px;
     }
 
-    registros.forEach(a => {
-      const div = document.createElement("div");
-      div.classList.add("cardAgendamento");
+    h1 {
+      margin-bottom: 20px;
+      color: #222;
+    }
 
-      // Alerta se estiver dentro de 1h
-      const [h, m] = a.hora.split(":").map(Number);
-      const dataHora = new Date(a.data);
-      dataHora.setHours(h, m, 0, 0);
-      const agora = new Date();
-      if ((dataHora - agora) <= 3600000 && (dataHora - agora) >= 0) {
-        div.classList.add("alerta");
-      }
+    #agenda {
+      display: grid;
+      grid-template-columns: repeat(4, 120px);
+      gap: 15px;
+      margin-top: 20px;
+    }
 
-      div.innerHTML = `<span>${a.hora} - ${a.falecido}</span><span>${a.setor || "-"}</span>`;
+    .hora {
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
 
-      cardDia.appendChild(div);
-    });
+    .livre {
+      background: white;
+      border: 2px solid #4caf50;
+      color: #4caf50;
+    }
+    .livre:hover {
+      background: #4caf50;
+      color: white;
+    }
 
-    container.appendChild(cardDia);
-  }
-}
+    .ocupado {
+      background: #f44336;
+      color: white;
+      cursor: not-allowed;
+    }
 
-// Atualiza a cada minuto para alertas em tempo real
-setInterval(atualizarCalendario, 60000);
-atualizarCalendario();
-</script>
+    #mensagem {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Agende seu horário</h1>
+  <div id="agenda"></div>
+  <div id="mensagem"></div>
 
+  <!-- Supabase no modo global -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="agendamento.js"></script>
 </body>
 </html>
