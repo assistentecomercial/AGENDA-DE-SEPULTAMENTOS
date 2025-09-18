@@ -2,10 +2,125 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Redirecionando...</title>
-  <meta http-equiv="refresh" content="2; url=login.html">
+  <title>Login - Sistema de Sepultamentos</title>
+  <style>
+    body {
+      font-family: Garamond, serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f2f5;
+    }
+    .login-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      width: 350px;
+      text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #28a745;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .login-box button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .btn-login {
+      background: #28a745;
+      color: white;
+    }
+    .btn-login:hover {
+      background: #218838;
+    }
+    .btn-calendario {
+      background: #007bff;
+      color: white;
+    }
+    .btn-calendario:hover {
+      background: #0069d9;
+    }
+  </style>
 </head>
 <body>
-  <p>Redirecionando para a página de login...</p>
+  <div class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="usuario" placeholder="Usuário" required>
+    <input type="password" id="senha" placeholder="Senha" required>
+    
+    <!-- Botão de login que leva para agendamento -->
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    
+    <!-- Botão direto para calendário -->
+    <button class="btn-calendario" onclick="window.location.href='calendario.html'">Calendário</button>
+  </div>
+
+  <script>
+    // Usuários normais
+    const usuariosPermitidos = [
+      "CARLOS","DÁRVILLA","DIEGO","EDER","ELTON","GENTILBERTH","ILDEYLSON",
+      "JOSE","KARINE","LAURA","LUCIENE","LUIS","MANOELLY","MARCIO","MILLENA",
+      "PAULO","RAFAELLE","RICHARDS","TALITA","THALYSON","VIVIAN","VIVIANE"
+    ];
+
+    // Admins
+    const admins = ["LUANA","RAFAEL"];
+
+    // Senhas
+    const senhaUsuario = "Complexo@";
+    const senhaAdmin = "COMERCIAL@";
+
+    function fazerLogin() {
+      const usuario = document.getElementById("usuario").value.trim().toUpperCase();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!usuario || !senha) {
+        alert("Preencha usuário e senha!");
+        return;
+      }
+
+      // Login admin
+      if (admins.includes(usuario)) {
+        if (senha !== senhaAdmin) {
+          alert("Senha incorreta para administrador!");
+          return;
+        }
+        localStorage.setItem("usuarioLogado", usuario);
+        localStorage.setItem("isAdmin", "true");
+        window.location.href = "agendamento.html";
+        return;
+      }
+
+      // Login usuário normal
+      if (!usuariosPermitidos.includes(usuario)) {
+        alert("Usuário não autorizado!");
+        return;
+      }
+      if (senha !== senhaUsuario) {
+        alert("Senha incorreta!");
+        return;
+      }
+
+      localStorage.setItem("usuarioLogado", usuario);
+      localStorage.setItem("isAdmin", "false");
+      window.location.href = "agendamento.html";
+    }
+  </script>
 </body>
 </html>
